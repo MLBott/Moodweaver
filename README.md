@@ -132,8 +132,7 @@ Setup your LLM provider in settings interface
     
     [Trust: ↑ | Paranoia: ↓ | Mood: Cautiously Hopeful]
 ```
-
-![MWpic1](https://github.com/user-attachments/assets/d67783ac-864d-4c0d-89d3-860d93b408f1)
+![MWpic2](https://github.com/user-attachments/assets/be7251aa-7ed1-42d9-bb46-a1c658bc58b1)
 
 ---
 
