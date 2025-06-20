@@ -5,8 +5,6 @@
 
 ![Moodweaver Banner](https://github.com/user-attachments/assets/a09ce70a-d99b-494c-980d-6af3a0f203e2?text=🎭+Moodweaver)
 
-![moodweaver banner asset before head placed 1](https://github.com/user-attachments/assets/a09ce70a-d99b-494c-980d-6af3a0f203e2)
-
 *Transform your AI conversations into immersive role-playing experiences*
 
 [🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Demo](#-demo) • [📖 Documentation](#-documentation)
