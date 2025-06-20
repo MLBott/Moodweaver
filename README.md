@@ -3,7 +3,7 @@
 
 <div align="center">
 
-![Moodweaver Banner](https://github.com/user-attachments/assets/a09ce70a-d99b-494c-980d-6af3a0f203e2?text=🎭+Moodweaver)
+![Moodweaver Banner](https://github.com/user-attachments/assets/65eb2f28-ade4-45ce-b722-a91fc53b5d6a?text=🎭+Moodweaver)
 
 *Transform your AI conversations into immersive role-playing experiences*
 
