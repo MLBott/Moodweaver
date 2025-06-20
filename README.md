@@ -20,7 +20,7 @@
 Moodweaver brings AI characters to life with dynamically scripted emotions, evolving personalities, and dynamic storytelling.
 
 ### 🧠 **The Personality Orrery**
-Our groundbreaking emotion engine gives AI characters persistent, evolving emotional states:
+Our emotion engine gives AI characters persistent, evolving emotional states:
 - **Dynamic Traits**: Trust, paranoia, humor, aggression - all shift based on your interactions
 - **Sentiment Analysis**: Characters genuinely react to praise, criticism, flirtation, and hostility  
 - **Cathartic Events**: Witness dramatic personality shifts like "Overflowing Joy" or "Paranoid Breakdown"
@@ -133,6 +133,15 @@ Setup your LLM provider in settings interface
     [Trust: ↑ | Paranoia: ↓ | Mood: Cautiously Hopeful]
 ```
 ![MWpic2](https://github.com/user-attachments/assets/be7251aa-7ed1-42d9-bb46-a1c658bc58b1)
+
+---
+## 📖 Todo
+
+- Modular character import/export
+- 
+-  
+- 
+- 
 
 ---
 
