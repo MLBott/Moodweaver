@@ -5,10 +5,6 @@
 
 ![Moodweaver Banner](https://via.placeholder.com/800x200/2D1B69/FFFFFF?text=🎭+Moodweaver)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 
 *Transform your AI conversations into immersive role-playing experiences*
 
@@ -45,10 +41,28 @@ Characters aren't just reactive - they have **agency and goals**:
 <tr>
 <td width="50%">
 
-### 🎨 **Visual Mood System**
-- Real-time emotion visualization
-- Dynamic character silhouettes
-- Color coding as body language
+### 🎨 Visual Mood & Body Language System
+
+**See your character's emotions in real-time through color-coded vibes!**
+
+## How it works:
+**🌈 Mood Colors = Instant Emotional Intel**
+- Character silhouette changes color based on feelings
+- Red = angry/aggressive | Blue = sad | Yellow = funny/open/happy
+- Colors blend for complex emotions (purple = sad + angry)
+
+**🫥 Mystery Mode**
+- Sometimes the mood gets hidden behind an overlay
+- Happens at set conversation points
+- Character becomes emotionally "unreadable"
+
+**👀 Stare & Consequences**
+- Click the hidden mood overlay = maybe you're noticed staring
+- If character notices, they can react immediately
+- Their trust drops, tension rises
+
+## The Magic:
+Powered by `PersonalityOrrery` engine for authentic emotional responses that actually matter to gameplay.
 
 ### 🎲 **RPG Tools**
 - Built-in dice roller (d6, d10, d20, d2)
