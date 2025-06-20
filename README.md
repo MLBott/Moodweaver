@@ -118,6 +118,8 @@ Setup your LLM provider in settings interface
     [Trust: ↑ | Paranoia: ↓ | Mood: Cautiously Hopeful]
 ```
 
+![MWpic1](https://github.com/user-attachments/assets/d67783ac-864d-4c0d-89d3-860d93b408f1)
+
 ---
 
 ## 🛠️ Technology Stack
@@ -126,9 +128,8 @@ Setup your LLM provider in settings interface
 
 | Frontend | Backend | AI Integration |
 |----------|---------|----------------|
-| React 18+ | Node.js | OpenAI API |
-| TypeScript | Express | Anthropic API |
-| Tailwind CSS | WebSockets | Ollama Support |
+| JavaScript | Python | OpenAI API |
+| HTML | Flask | Anthropic API |
 
 </div>
 
