@@ -82,20 +82,19 @@ git clone https://github.com/yourusername/moodweaver.git
 cd moodweaver
 
 # Install dependencies
-npm install
+pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
+# Run Start file
+click Windows bat or Mac/Linus Start sh in main folder
 
-# Start the development server
-npm run dev
+# Settings
+Setup your LLM provider in settings interface
 ```
 
 ### 🔑 **API Keys Required**
 - OpenAI API key for GPT models
 - Anthropic API key for Claude models
-- Or run locally with Ollama (no API key needed)
+- ~~Or run locally with Ollama (no API key needed)~~ Soon
 
 ---
 
