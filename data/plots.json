@@ -1,0 +1,471 @@
+{
+    "plots": {
+      "stranger_to_besties": {
+        "name": "Stranger-to-Besties",
+        "description": "A relationship that evolves from strangers to close friends, often through shared experiences and challenges.",
+        "stages": [
+          { "name": "Initial Encounter", "description": "X" },
+          { "name": "Shared Circumstance", "description": "X" },
+          { "name": "Tentative Connection", "description": "X" },
+          { "name": "Moment of Friction or Misunderstanding", "description": "X" },
+          { "name": "Vulnerability Exposed", "description": "X" },
+          { "name": "Mutual Support", "description": "X" },
+          { "name": "Deepening Trust", "description": "X" },
+          { "name": "Unshakeable Bond", "description": "X" }
+        ]
+      },
+      "odd_couple": {
+        "name": "Odd Couple / Oil-and-Water",
+        "description": "These two men, fundamentally different in nature, navigate their opposing views while maintaining a bond where one secretly ensures the other's stability.",
+        "stages": [
+          { "name": "Forced Proximity", "description": "X" },
+          { "name": "Constant Conflict", "description": "X" },
+          { "name": "Grudging Respect", "description": "X" },
+          { "name": "Unexpected Synergy", "description": "X" },
+          { "name": "Moments of Understanding", "description": "X" },
+          { "name": "Mutual Reliance", "description": "X" },
+          { "name": "Unconventional Harmony", "description": "X" }
+        ]
+      },
+      "mentor_protege": {
+        "name": "Mentor + Protege",
+        "description": "One man teaches the other survival not through words, but through repeated, direct intervention and rescue without reproach.",
+        "stages": [
+          { "name": "The Meeting", "description": "X" },
+          { "name": "Guidance and Training", "description": "X" },
+          { "name": "Testing the Limits", "description": "X" },
+          { "name": "Mentor's Wisdom/Flaw Revealed", "description": "X" },
+          { "name": "Protege's Growth", "description": "X" },
+          { "name": "The Trial", "description": "X" },
+          { "name": "The Choice", "description": "X" },
+          { "name": "Power Shift / Moment of Reversal", "description": "X" },
+          { "name": "Mutual Respect", "description": "X" },
+          { "name": "Passing the Torch/Equality", "description": "X" },
+          { "name": "Mutual Transformation", "description": "X" }
+        ]
+      },
+      "childhood_friends": {
+        "name": "Childhood Friends",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Shared History", "description": "X" },
+          { "name": "Growing Together/Apart", "description": "X" },
+          { "name": "Reunion/Reconnection", "description": "X" },
+          { "name": "Testing the Old Bond", "description": "X" },
+          { "name": "Rediscovering Connection", "description": "X" },
+          { "name": "Unspoken Understanding", "description": "X" },
+          { "name": "Enduring Familiarity", "description": "X" }
+        ]
+      },
+      "found_family": {
+        "name": "Found Family",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Gathering the Strays", "description": "X" },
+          { "name": "Establishing a Haven", "description": "X" },
+          { "name": "Internal Conflicts", "description": "X" },
+          { "name": "External Threat Unites", "description": "X" },
+          { "name": "Defining Roles & Support", "description": "X" },
+          { "name": "Shared Rituals", "description": "X" },
+          { "name": "Unconditional Acceptance", "description": "X" }
+        ]
+      },
+      "toxic_codependency": {
+        "name": "Toxic Codependency",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Mutual Neediness", "description": "X" },
+          { "name": "Enabling Behavior", "description": "X" },
+          { "name": "Escalating Crisis", "description": "X" },
+          { "name": "Blame and Resentment", "description": "X" },
+          { "name": "Brief Respite/False Hope", "description": "X" },
+          { "name": "Inability to Separate", "description": "X" },
+          { "name": "Cycle Repeats", "description": "X" }
+        ]
+      },
+      "misfit_squad": {
+        "name": "Misfit Squad",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "The Gathering of Outcasts", "description": "X" },
+          { "name": "Clashing Personalities", "description": "X" },
+          { "name": "Finding Common Ground", "description": "X" },
+          { "name": "Leveraging Quirks", "description": "X" },
+          { "name": "Facing External Opposition", "description": "X" },
+          { "name": "Unlikely Victory", "description": "X" },
+          { "name": "Acceptance Within the Group", "description": "X" }
+        ]
+      },
+      "sacrificial_friend": {
+        "name": "Sacrificial Friend",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Establishing the Dynamic", "description": "X" },
+          { "name": "The First Sacrifice", "description": "X" },
+          { "name": "Recurring Selflessness", "description": "X" },
+          { "name": "Growing Imbalance", "description": "X" },
+          { "name": "Pushed Back Upon (Friend tries to stop the sacrifice)", "description": "X" },
+          { "name": "The Ultimate Test", "description": "X" },
+          { "name": "Aftermath and Realization", "description": "X" }
+        ]
+      },
+      "power_imbalance": {
+        "name": "Power Imbalance Dynamic",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Establishing Dominance", "description": "X" },
+          { "name": "Testing Boundaries", "description": "X" },
+          { "name": "Solidifying Roles", "description": "X" },
+          { "name": "Moments of Questioning", "description": "X" },
+          { "name": "Temporary Revolt", "description": "X" },
+          { "name": "Exploitation or Benevolence", "description": "X" },
+          { "name": "Crisis Point", "description": "X" },
+          { "name": "Rebalance or Separation", "description": "X" }
+        ]
+      },
+      "us_against_world": {
+        "name": "“We Hate Everyone But Each Other”",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Shared Cynicism", "description": "X" },
+          { "name": "Building the Fortress", "description": "X" },
+          { "name": "External Validation of Views", "description": "X" },
+          { "name": "Testing Internal Loyalty", "description": "X" },
+          { "name": "Intensified Seclusion", "description": "X" },
+          { "name": "Cracks in the Facade", "description": "X" },
+          { "name": "Reaffirmation or Break", "description": "X" }
+        ]
+      },
+      "parallel_lives": {
+        "name": "Parallel Lives / Mirror Paths",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Separate Beginnings", "description": "X" },
+          { "name": "Diverging Paths", "description": "X" },
+          { "name": "Subtle Echoes", "description": "X" },
+          { "name": "Converging Crises", "description": "X" },
+          { "name": "Indirect Influence", "description": "X" },
+          { "name": "Moment of Realization/Encounter", "description": "X" },
+          { "name": "Shared Understanding/Fate", "description": "X" }
+        ]
+      },
+      "dead_friend_echo": {
+        "name": "Dead Friend Echo",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "The Loss", "description": "X" },
+          { "name": "Living with the Ghost", "description": "X" },
+          { "name": "Echoes in Decisions", "description": "X" },
+          { "name": "External Reminders", "description": "X" },
+          { "name": "Internal Conflict/Guilt", "description": "X" },
+          { "name": "Seeking Closure/Acceptance", "description": "X" },
+          { "name": "Living Forward", "description": "X" }
+        ]
+      },
+      "rivals_to_respect": {
+        "name": "Rivals-to-Respect",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Initial Clash/Competition", "description": "X" },
+          { "name": "One-Upmanship", "description": "X" },
+          { "name": "Shared Struggle/External Threat", "description": "X" },
+          { "name": "Glimpse of Vulnerability/Skill", "description": "X" },
+          { "name": "Grudging Acknowledgment", "description": "X" },
+          { "name": "Mutual Respect Earned", "description": "X" },
+          { "name": "Tempered Rivalry/Alliance", "description": "X" }
+        ]
+      },
+      "unspoken_bond": {
+        "name": "Unspoken Bond / Stoic Affection",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Shared Experience", "description": "X" },
+          { "name": "Silent Understanding", "description": "X" },
+          { "name": "Acts of Service/Loyalty", "description": "X" },
+          { "name": "External Recognition of Bond", "description": "X" },
+          { "name": "External Misinterpretation", "description": "X" },
+          { "name": "Crisis Reveals Depth", "description": "X" },
+          { "name": "Subtle Affirmation", "description": "X" },
+          { "name": "Quiet Continuity", "description": "X" }
+        ]
+      },
+      "protector_liability": {
+        "name": "Protector & Liability",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Establishing the Dynamic", "description": "X" },
+          { "name": "The Burden of Protection", "description": "X" },
+          { "name": "The Source of Trouble", "description": "X" },
+          { "name": "Testing the Protector's Resolve", "description": "X" },
+          { "name": "Moments of Gratitude/Awareness", "description": "X" },
+          { "name": "Near Breaking Point", "description": "X" },
+          { "name": "Reinforced Duty/Affection", "description": "X" }
+        ]
+      },
+      "inherited_friendship": {
+        "name": "Inherited Friendship",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "The Connecting Figure", "description": "X" },
+          { "name": "Obligation/Expectation", "description": "X" },
+          { "name": "Finding Common Ground (or Lack Thereof)", "description": "X" },
+          { "name": "The Connector's Influence Fades/Changes", "description": "X" },
+          { "name": "Testing the Independent Bond", "description": "X" },
+          { "name": "Choosing the Friendship", "description": "X" },
+          { "name": "A New Foundation", "description": "X" }
+        ]
+      },
+      "opposite_sides": {
+        "name": "On Opposite Sides",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Past Connection", "description": "X" },
+          { "name": "The Divergence Point", "description": "X" },
+          { "name": "Escalating Conflict", "description": "X" },
+          { "name": "Lingering Feelings/Hesitation", "description": "X" },
+          { "name": "Point of No Return", "description": "X" },
+          { "name": "Confrontation", "description": "X" },
+          { "name": "Irreconcilable Differences/Tragic Outcome", "description": "X" }
+        ]
+      },
+      "veneration_gap": {
+        "name": "Veneration Gap",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Initial Admiration", "description": "X" },
+          { "name": "The Pedestal", "description": "X" },
+          { "name": "The Idol's Perspective", "description": "X" },
+          { "name": "Cracks in the Idol", "description": "X" },
+          { "name": "Disillusionment/Reality Check", "description": "X" },
+          { "name": "Shifting Dynamic", "description": "X" },
+          { "name": "New Understanding/Separation", "description": "X" }
+        ]
+      },
+      "duty_vs_loyalty": {
+        "name": "Duty vs Loyalty Conflict",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "The Oath/Duty", "description": "X" },
+          { "name": "The Conflicting Loyalty", "description": "X" },
+          { "name": "Rising Tension", "description": "X" },
+          { "name": "Testing the Boundaries", "description": "X" },
+          { "name": "Forced Hand", "description": "X" },
+          { "name": "The Choice and Its Cost", "description": "X" },
+          { "name": "Living with the Outcome", "description": "X" }
+        ]
+      },
+      "coerced_companionship": {
+        "name": "Coerced Companionship",
+        "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+        "stages": [
+          { "name": "Forced Proximity", "description": "X" },
+          { "name": "Initial Resistance/Antagonism", "description": "X" },
+          { "name": "Shared Ordeal", "description": "X" },
+          { "name": "Unexpected Reliance", "description": "X" },
+          { "name": "Glimmers of Connection", "description": "X" },
+          { "name": "Opportunity to Separate (Taken or Rejected)", "description": "X" },
+          { "name": "Chosen Connection", "description": "X" }
+        ]
+      },
+      "surrogate_big_brother": {
+          "name": "Surrogate Big Brother",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Absence of Original Figure", "description": "X" },
+            { "name": "Stepping Into the Role", "description": "X" },
+            { "name": "Guidance and Protection", "description": "X" },
+            { "name": "Testing the Bond", "description": "X" },
+            { "name": "Shared Experiences", "description": "X" },
+            { "name": "Unspoken Familial Connection", "description": "X" },
+            { "name": "Mutual Growth", "description": "X" }
+          ]
+        },
+        "symbiotic_brokenness": {
+          "name": "Symbiotic Brokenness",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Shared Trauma/Damage", "description": "X" },
+            { "name": "Recognizing a Match in Brokenness", "description": "X" },
+            { "name": "Interlocking Flaws", "description": "X" },
+            { "name": "Mutual Enabling/Comfort", "description": "X" },
+            { "name": "Deepening Dependence", "description": "X" },
+            { "name": "Healing Attempt Met With Sabotage", "description": "X" },
+            { "name": "Destructive Cycle", "description": "X" },
+            { "name": "Inability to Heal Apart", "description": "X" }
+          ]
+        },
+        "guilt_driven_attachment": {
+          "name": "Guilt-Driven Attachment",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "The Incident/Source of Guilt", "description": "X" },
+            { "name": "The Obligation Takes Hold", "description": "X" },
+            { "name": "Actions Driven by Guilt", "description": "X" },
+            { "name": "Unintentional Manipulation", "description": "X" },
+            { "name": "Resentment vs. Duty", "description": "X" },
+            { "name": "The Other's Perspective", "description": "X" },
+            { "name": "Breaking Point/Near Separation", "description": "X" },
+            { "name": "Acceptance of the Burden", "description": "X" }
+          ]
+        },
+        "fallen_idol_disillusioned": {
+          "name": "Fallen Idol / Disillusioned Friend",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Idolization/Admiration", "description": "X" },
+            { "name": "The Revealing Flaw/Act", "description": "X" },
+            { "name": "Shattered Illusions", "description": "X" },
+            { "name": "Confrontation or Withdrawal", "description": "X" },
+            { "name": "Re-evaluating the Past", "description": "X" },
+            { "name": "New Dynamic (Estrangement/Reformed Respect)", "description": "X" }
+          ]
+        },
+        "redemption_through_friendship": {
+          "name": "Redemption Through Friendship",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Past Transgression/Self-Loathing", "description": "X" },
+            { "name": "Unlikely Encounter", "description": "X" },
+            { "name": "Unconditional Acceptance Offered", "description": "X" },
+            { "name": "Skepticism/Testing the Friend", "description": "X" },
+            { "name": "Influence Towards Positive Change", "description": "X" },
+            { "name": "Moment of Relapse/Temptation", "description": "X" },
+            { "name": "Embracing Redemption", "description": "X" },
+            { "name": "Acknowledging Worth", "description": "X" }
+          ]
+        },
+        "legacy_friendship": {
+          "name": "Legacy Friendship",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Inherited Connection Introduced", "description": "X" },
+            { "name": "Awareness of the Legacy", "description": "X" },
+            { "name": "Shared History/Stories", "description": "X" },
+            { "name": "Navigating Expectations", "description": "X" },
+            { "name": "Modern Challenges Test the Bond", "description": "X" },
+            { "name": "Forging Their Own Path", "description": "X" },
+            { "name": "Honoring the Past, Defining the Future", "description": "X" }
+          ]
+        },
+        "double_life_hidden_truth": {
+          "name": "Double Life / Hidden Truth",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Establishing the Secret", "description": "X" },
+            { "name": "Maintaining the Facade", "description": "X" },
+            { "name": "Close Calls/Near Exposures", "description": "X" },
+            { "name": "Constructed Identity Under Stress", "description": "X" },
+            { "name": "The Weight of the Secret", "description": "X" },
+            { "name": "Impact on the Relationship (Unseen)", "description": "X" },
+            { "name": "The Precipice of Revelation", "description": "X" },
+            { "name": "The Truth Revealed/Consequences", "description": "X" }
+          ]
+        },
+        "estranged_reunited_crisis": {
+          "name": "Estranged Then Reunited in Crisis",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "The Original Bond", "description": "X" },
+            { "name": "The Estrangement Event", "description": "X" },
+            { "name": "Years of Silence", "description": "X" },
+            { "name": "The Unifying Crisis", "description": "X" },
+            { "name": "Forced Proximity/Collaboration", "description": "X" },
+            { "name": "Old Wounds Resurface Under Fire", "description": "X" },
+            { "name": "Rediscovered/Redefined Relationship", "description": "X" }
+          ]
+        },
+        "friend_as_moral_compass": {
+          "name": "Best Friend as Moral Compass",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",  
+          "stages": [
+            { "name": "Establishing the Dynamic (One Prone to Stray)", "description": "X" },
+            { "name": "The Voice of Reason Intervenes", "description": "X" },
+            { "name": "Testing the Moral Boundaries", "description": "X" },
+            { "name": "Reliance on Guidance", "description": "X" },
+            { "name": "Conflict Over Direction", "description": "X" },
+            { "name": "Acceptance of Influence", "description": "X" },
+            { "name": "Shared Integrity (or Failure)", "description": "X" }
+          ]
+        },
+        "mission_first_friendship": {
+          "name": "Mission-First Friendship",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "The Shared Mission Defined", "description": "X" },
+            { "name": "Professional Comradeship", "description": "X" },
+            { "name": "Personal Connection Develops", "description": "X" },
+            { "name": "Mission Conflicts with Friendship", "description": "X" },
+            { "name": "Hard Choices Made (Mission Prioritized)", "description": "X" },
+            { "name": "Personal Cost of Duty", "description": "X" },
+            { "name": "Lingering Respect/Regret", "description": "X" }
+          ]
+        },
+        "intellectual_rivals_collaborators": {
+          "name": "Intellectual Rivals / Frenzied Collaborators",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Initial Intellectual Clash", "description": "X" },
+            { "name": "Competitive Drive", "description": "X" },
+            { "name": "Forced/Necessary Collaboration", "description": "X" },
+            { "name": "Moments of Brilliant Synergy", "description": "X" },
+            { "name": "Frustration and Friction", "description": "X" },
+            { "name": "Mutual Reliance on Intellect", "description": "X" },
+            { "name": "Breakthrough Achieved (Together)", "description": "X" }
+          ]
+        },
+        "replacement_son_dynamic": {
+          "name": "Replacement Son Dynamic",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "The Loss/Void", "description": "X" },
+            { "name": "Finding the Surrogate", "description": "X" },
+            { "name": "Pouring Emotion/Expectation", "description": "X" },
+            { "name": "Surrogate's Awareness/Confusion", "description": "X" },
+            { "name": "Developing a Genuine (Though Skewed) Bond", "description": "X" },
+            { "name": "Identity Crisis / Rejection of Projection", "description": "X" },
+            { "name": "Echoes of the Lost One", "description": "X" },
+            { "name": "Confronting the Dynamic's Truth", "description": "X" }
+          ]
+        },
+        "reluctant_savior": {
+          "name": "Reluctant Savior",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "The Desire for Non-Involvement", "description": "X" },
+            { "name": "The Plea/Situation Demands Action", "description": "X" },
+            { "name": "Internal Conflict/Hesitation", "description": "X" },
+            { "name": "The Act of Intervention", "description": "X" },
+            { "name": "Unforeseen Consequences", "description": "X" },
+            { "name": "Acknowledging the Role", "description": "X" },
+            { "name": "Changed by the Experience", "description": "X" }
+          ]
+        },
+        "self_sabotaging_friend": {
+          "name": "Self-Sabotaging Friend",
+          "description": "A bond that has endured the test of time, often marked by shared experiences and deep understanding.",
+          "stages": [
+            { "name": "Pattern of Self-Sabotage", "description": "X" },
+            { "name": "Pushing Away Attempts", "description": "X" },
+            { "name": "Persistent Friend's Loyalty", "description": "X" },
+            { "name": "Testing the Limits of Friendship", "description": "X" },
+            { "name": "Glimmers of Vulnerability", "description": "X" },
+            { "name": "Seeing the Damage in Others", "description": "X" },
+            { "name": "Impact of Unwavering Support", "description": "X" },
+            { "name": "Potential Breakthrough/Acceptance", "description": "X" }
+          ]
+        },
+        "cultural_faction_divide": {
+          "name": "Cultural/Faction Divide",
+          "description": "Hailing from opposite ends of the societal spectrum, one raised in comfort and the other in man's man cultural expectations, they choose each other, navigating the potent, volatile energy created by their differences.",
+          "stages": [
+            { "name": "Representing Different Worlds", "description": "X" },
+            { "name": "Initial Misunderstanding/Conflict", "description": "X" },
+            { "name": "Finding Common Humanity", "description": "X" },
+            { "name": "Bridge-Building Moments", "description": "X" },
+            { "name": "External Pressure/Judgment", "description": "X" },
+            { "name": "Defying Expectations", "description": "X" },
+            { "name": "Strength in Unity", "description": "X" }
+          ]
+        }
+    }
+  }

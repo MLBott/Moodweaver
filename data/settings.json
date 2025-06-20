@@ -1,0 +1,18 @@
+{
+  "llm_provider": "openai",
+  "ollama_url": "http://localhost:11434",
+  "temperature": 0.7,
+  "api_keys": {
+    "openai": "",
+    "anthropic": ""
+  },
+  "default_model": "",
+  "support_llm": {
+    "provider": "",
+    "api_keys": {
+      "openai": "",
+      "anthropic": ""
+    },
+    "model": ""
+  }
+}

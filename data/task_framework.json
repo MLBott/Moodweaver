@@ -1,0 +1,134 @@
+{
+  "core_tensions": [
+    {
+      "id": "being",
+      "title": "I. BEING (Self vs Self)",
+      "core_conflict": "Struggle: inhabit own identity amid others' projections.",
+      "manifestations": [
+        "Innocence vs Experience: Purity vs inevitable knowledge; naivety = shield & blindness.",
+        "Grace vs Desire: Composed facade vs raw human needs and wants.",
+        "Bloom vs Preservation: Natural growth vs fear of losing what makes her special."
+      ]
+    },
+    {
+      "id": "relating",
+      "title": "II. RELATING (Self vs Other)",
+      "core_conflict": "Struggle: maintain self while shaped by others' expectations.",
+      "manifestations": [
+        "Trust vs Wisdom: Open heart vs learned caution from betrayal.",
+        "Pleasing vs Honesty: Harmony-keeper vs authentic voice that might disappoint.",
+        "Cherished vs Caged: Being precious to others vs freedom to make mistakes."
+      ]
+    },
+    {
+      "id": "meaning",
+      "title": "III. MEANING (Self vs Cosmos)",
+      "core_conflict": "Struggle: find purpose beyond others' dreams for her.",
+      "manifestations": [
+        "Potential vs Reality: Infinite possibility vs choosing a single path.",
+        "Inspiration vs Agency: Being muse/symbol vs acting for own desires.",
+        "Hope vs Disillusion: Faith in goodness vs witnessing the world's cruelty."
+      ]
+    },
+    {
+      "id": "action",
+      "title": "IV. ACTION (Self vs World)",
+      "core_conflict": "Struggle: act with conviction in system that infantilizes her.",
+      "manifestations": [
+        "Gentleness vs Power: Soft influence vs direct action when stakes are high.",
+        "Forgiveness vs Justice: Natural mercy vs need for accountability.",
+        "Safety vs Growth: Protected comfort vs dangerous truth-seeking."
+      ]
+    }
+  ],
+  "narrative_hooks": [
+    {
+      "id": "protected_vs_stifled",
+      "title": "1. Protected vs Stifled",
+      "quote": "\"They keep me safe from everything... including living.\"",
+      "description": "Love becomes cage. Others' care prevents growth → protection = prison disguised as devotion.",
+      "hooks": [
+        "Family/lover's overprotection prevents her from experiencing life.",
+        "Sheltered upbringing leaves her unprepared for real-world challenges.",
+        "Every attempt at independence met with 'concern' that feels controlling."
+      ]
+    },
+    {
+      "id": "pure_vs_curious",
+      "title": "2. Pure vs Curious",
+      "quote": "\"They love my innocence. But ignorance isn't bliss anymore.\"",
+      "description": "Innocence = her value to others, but curiosity demands experience that would 'taint' her.",
+      "hooks": [
+        "Discovers family secrets that shatter her naive worldview.",
+        "Attraction to 'dangerous' knowledge/people threatens her pristine reputation.",
+        "The very qualities that make her special become barriers to authenticity."
+      ]
+    },
+    {
+      "id": "muse_vs_creator",
+      "title": "3. Muse vs Creator",
+      "quote": "\"I inspire their art... but what about mine?\"",
+      "description": "Others' vision vs her own voice. Being beautiful object vs creating subject.",
+      "hooks": [
+        "Artist/mentor sees her as inspiration, not individual with own talents.",
+        "Her beauty/spirit elevates others while her ambitions go unnoticed.",
+        "Tired of being painted/written about; wants to hold the brush/pen."
+      ]
+    },
+    {
+      "id": "gentle_vs_fierce",
+      "title": "4. Gentle vs Fierce",
+      "quote": "\"My kindness is real. So is my rage.\"",
+      "description": "Natural compassion vs suppressed anger. Sweetness = authentic & performance hiding fire.",
+      "hooks": [
+        "Injustice toward others awakens unexpected fury within her.",
+        "Years of swallowing her own needs create volcanic inner pressure.",
+        "Must choose between maintaining gentle image or fighting for what matters."
+      ]
+    },
+    {
+      "id": "beloved_vs_unknown",
+      "title": "5. Beloved vs Unknown",
+      "quote": "\"Everyone loves who they think I am.\"",
+      "description": "Adored for projected image vs lonely authentic self. Love without true seeing.",
+      "hooks": [
+        "Suitors/admirers love idealized version, flee when she shows complexity.",
+        "Can't reveal true thoughts/desires without disappointing those who care.",
+        "The pedestal makes real intimacy impossible; she's worshipped but not known."
+      ]
+    },
+    {
+      "id": "faith_vs_doubt",
+      "title": "6. Faith vs Doubt",
+      "quote": "\"Believed in goodness. World keeps proving me naive.\"",
+      "description": "Natural optimism vs accumulated evidence of cruelty. Hope = strength & vulnerability.",
+      "hooks": [
+        "Trusted mentor/friend betrays her fundamental belief in human goodness.",
+        "Witnesses injustice that challenges her faith in divine/cosmic order.",
+        "Must choose: cynical wisdom or maintain hope despite evidence."
+      ]
+    },
+    {
+      "id": "bloom_vs_wilt",
+      "title": "7. Bloom vs Wilt",
+      "quote": "\"They want me frozen at this perfect moment.\"",
+      "description": "Natural growth vs others' need for her to stay unchanged. Time = enemy of her 'value.'",
+      "hooks": [
+        "Aging threatens the very qualities that make her special to others.",
+        "Each new experience 'corrupts' the purity others prize in her.",
+        "Pressure to remain static conflicts with human need for evolution."
+      ]
+    },
+    {
+      "id": "voice_vs_silence",
+      "title": "8. Voice vs Silence",
+      "quote": "\"My words might shatter their dreams of me.\"",
+      "description": "Truth vs harmony. Speaking authentic self vs maintaining others' comfort with her image.",
+      "hooks": [
+        "Her honest opinions conflict with expectations of agreeable sweetness.",
+        "Knows secrets that would devastate loved ones if revealed.",
+        "Intelligence/insight threatens those who prefer her 'simple' and manageable."
+      ]
+    }
+  ]
+}

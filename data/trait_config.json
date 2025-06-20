@@ -1,0 +1,308 @@
+{
+  "fatigue": {
+    "baseline": 0.3,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "humor": {
+    "baseline": 0.25,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "grudge": {
+    "baseline": 0.4,
+    "range": [
+      0.0,
+      0.8
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "openness": {
+    "baseline": 0.5,
+    "range": [
+      0.2,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "skeptical": {
+    "baseline": 0.6,
+    "range": [
+      0.0,
+      0.9
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "energy": {
+    "baseline": 0.6,
+    "range": [
+      0.1,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "trust": {
+    "baseline": 0.3,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "paranoia": {
+    "baseline": 0.3,
+    "range": [
+      0.0,
+      0.8
+    ],
+    "elasticity": 0.3,
+    "decay": 0.1
+  },
+  "empathy": {
+    "baseline": 0.5,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.2,
+    "decay": 0.05
+  },
+  "aggression": {
+    "baseline": 0.3,
+    "range": [
+      0.0,
+      0.9
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "confidence": {
+    "baseline": 0.55,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "pride": {
+    "baseline": 0.2,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "domineering": {
+    "baseline": 0.25,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "self_interest": {
+    "baseline": 0.5,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "introversion": {
+    "baseline": 0.5,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "antagonism": {
+    "baseline": 0.2,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "seriousness": {
+    "baseline": 0.4,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "ambition": {
+    "baseline": 0.3,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "stubbornness": {
+    "baseline": 0.4,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "guilt": {
+    "baseline": 0.1,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "rumination": {
+    "baseline": 0.2,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "analytical": {
+    "baseline": 0.5,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "confusion": {
+    "baseline": 0.1,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "tension": {
+    "baseline": 0.2,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "hope": {
+    "baseline": 0.5,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "sadness": {
+    "baseline": 0.2,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "fear": {
+    "baseline": 0.2,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "sense_of_moral_violation": {
+    "baseline": 0.0,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.05
+  },
+  "proactivity": {
+    "baseline": 0.7,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.1,
+    "decay": 0.02
+  },
+  "mission_driven": {
+    "baseline": 0.6,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.1,
+    "decay": 0.02
+  },
+  "decisiveness": {
+    "baseline": 0.65,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.03
+  },
+  "urgency": {
+    "baseline": 0.5,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.2,
+    "decay": 0.05
+  },
+  "autonomy": {
+    "baseline": 0.7,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.1,
+    "decay": 0.02
+  },
+  "pragmatism": {
+    "baseline": 0.6,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "elasticity": 0.15,
+    "decay": 0.03
+  }
+}
