@@ -13,6 +13,7 @@
 *Transform your AI conversations into immersive role-playing experiences*
 
 [🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Demo](#-demo) • [📖 Documentation](#-documentation)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/liamlb)
 
 </div>
 
@@ -26,7 +27,7 @@ Moodweaver brings AI characters to life with dynamically scripted emotions, evol
 Our groundbreaking emotion engine gives AI characters persistent, evolving emotional states:
 - **Dynamic Traits**: Trust, paranoia, humor, aggression - all shift based on your interactions
 - **Sentiment Analysis**: Characters genuinely react to praise, criticism, flirtation, and hostility  
-- **Cathartic Events**: Witness dramatic personality shifts like "Paranoid Breakdown" or "Explosive Anger"
+- **Cathartic Events**: Witness dramatic personality shifts like "Overflowing Joy" or "Paranoid Breakdown"
 - **Environmental Awareness**: Characters' surroundings have some effect on their personality
 
 ### 🎯 **Intelligent Task System**
