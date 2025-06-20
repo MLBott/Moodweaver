@@ -135,13 +135,14 @@ Setup your LLM provider in settings interface
 ![MWpic2](https://github.com/user-attachments/assets/be7251aa-7ed1-42d9-bb46-a1c658bc58b1)
 
 ---
-## 📖 Todo
+## 🫥 Todo
 
 - Modular character import/export
-- 
--  
-- 
-- 
+- Custom trait/emotion saved configurations
+- Premade characters with custom traits/emotions
+- Gemini, OpenRouter, Ollama support
+- UI improvements
+- Light/Dark themes
 
 ---
 
