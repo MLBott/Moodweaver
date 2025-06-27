@@ -106,7 +106,7 @@ cd moodweaver
 pip install -r requirements.txt
 
 # Run Start file
-click Windows bat or Mac/Linus Start sh in main folder
+click Windows bat or Mac/Linux Start sh in main folder
 
 # Settings
 Setup your LLM provider in settings interface
