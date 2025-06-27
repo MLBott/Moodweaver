@@ -55,8 +55,8 @@ Characters aren't just reactive - they have **agency and goals**:
 - Happens at set conversation points
 - Character becomes emotionally "unreadable"
 
-**👀 Stare & Consequences**
-- Click the hidden mood overlay = maybe you're noticed staring
+**👀 Read the Person & Consequences**
+- Click the hidden mood = maybe you're noticed staring
 - If character notices, they can react immediately
 - Their trust drops, tension rises
 
