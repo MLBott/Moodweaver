@@ -68,12 +68,18 @@ Powered by `PersonalityOrrery` engine for authentic emotional responses that act
 - Predefined plot structures
 - Character creation & management
 - Auto-continue AI conversation responses
+- Maps:
+  * Overland large area map
+  * Interior maps
+  * Each location of a map is blended in with neighbor areas in its description.
+    - Example: "Hearing a babbling brook from another area nearby."
+    - Example: "Seeing mountains peeking over the treeline from the East."
 
 </td>
 <td width="50%">
 
 ### 🔌 **Multi-LLM Support**
-- **OpenAI** (GPT-4.1 recommended)
+- **OpenAI** (GPT-4.1)
 - **Anthropic** (Claude-3.5-Sonnet)
 - *Coming Soon: Google Gemini, OpenRouter, Ollama (local)
 
