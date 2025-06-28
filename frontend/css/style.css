@@ -8,7 +8,7 @@
     --border-color: #dddddd;
     --success-color: #2ecc71;
     --error-color: #47211e;
-    --action-color: #6c99bb;  /* A muted, readable light blue */
+    --action-color: #cde2f1;  /* A muted, readable light blue */
     --attribution-color: #808080; /* This is the same as your --light-text */
 }
 
@@ -294,6 +294,56 @@ body {
   pointer-events: auto;
 }
 
+#world-map-panel {
+  /* already set to relative and overflow: hidden */
+  position: relative;
+  width: 250px;
+  height: 250px;
+  margin-bottom: 1em;
+  overflow: visible;
+  min-height: 250px;
+  isolation: isolate;
+}
+
+#world-map-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  transition: transform 0.2s;
+  will-change: transform;
+  z-index: 1
+}
+
+#world-map-panel:hover #world-map-inner {
+  transform: scale(1.02); /* Magnify 2x on hover */
+  z-index: 10;
+}
+
+#player-dot {
+  position: absolute;
+  z-index: 10; /* Higher z-index to stay on top */
+  pointer-events: none; /* So clicks pass through to the map */
+}
+
+.player-icon-selector-wrapper {
+  margin: 12px 0 16px 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#playerIconSelect {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  font-size: 1em;
+  background: #f8f8f8;
+  margin-bottom: 0;
+}
+
 
 /* Dice roller styles */
 .dice-section {
@@ -390,6 +440,7 @@ body {
     display: flex;
     flex-direction: column;
     background-color: var(--light-bg);
+    background-color: #222222; /* Light gray */
 }
 
 .chat-header {
@@ -440,7 +491,7 @@ body {
 }
 
 .message.character {
-    background-color: #041125;
+    background-color: #0e1316;
     color: #e6e2de;
     align-self: flex-start;
     border-bottom-left-radius: 0;
@@ -459,6 +510,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    background-color: #3b3b3b; /* Light gray */
 }
 
 .chat-input textarea {
@@ -469,6 +521,7 @@ body {
     border-radius: 4px;
     resize: none;
     font-size: 14px;
+    background-color: #969696; /* Light gray */
 }
 
 /* Button styles */
@@ -673,12 +726,25 @@ body {
 
 /* Add these styles to the end of your style.css file */
 
+.narrator-message {
+    font-style: italic;
+    color: #0e0a0a; /* A dark gray for readability */
+    text-align: center;
+    background-color: #0a0d0f; /* A very light gray background */
+    padding: 12px 20px;
+    margin: 15px 5%; /* Gives some horizontal space */
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 4px; /* Slightly rounded corners */
+}
+
+
 /* Wrapper for input and toggle */
 .chat-input-wrapper {
   display: flex;
   flex-direction: column;
   padding: 10px;
-  background-color: #f0f0f0;
+  background-color: #474747;
   border-top: 1px solid #ddd;
 }
 
@@ -722,7 +788,7 @@ body {
   gap: 8px;
   margin-top: 8px;
   font-size: 0.8em;
-  color: #666;
+  color: #2b2b2b;
 }
 
 .switch {
