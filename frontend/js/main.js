@@ -344,36 +344,6 @@ window.addEventListener("click", (event) => {
   }
 });
 
-document.addEventListener("DOMContentLoaded", function() {
-  const genderToggle = document.getElementById("bodyGenderToggle");
-  const bodyIconImg = document.getElementById("bodyIconImg");
-  const moodOverlay = document.getElementById("moodOverlay");
-
-  if (genderToggle && bodyIconImg) {
-    // Set default to female
-    bodyIconImg.src = "img/body_icon_f.png";
-    if (moodOverlay) {
-      moodOverlay.style.webkitMaskImage = `url('img/body_icon_f.png')`;
-      moodOverlay.style.maskImage = `url('img/body_icon_f.png')`;
-    }
-
-    genderToggle.addEventListener("change", function() {
-      if (genderToggle.checked) {
-        bodyIconImg.src = "img/body_icon_f.png";
-        if (moodOverlay) {
-          moodOverlay.style.webkitMaskImage = `url('img/body_icon_f.png')`;
-          moodOverlay.style.maskImage = `url('img/body_icon_f.png')`;
-        }
-      } else {
-        bodyIconImg.src = "img/body_icon_m.png";
-        if (moodOverlay) {
-          moodOverlay.style.webkitMaskImage = `url('img/body_icon_m.png')`;
-          moodOverlay.style.maskImage = `url('img/body_icon_m.png')`;
-        }
-      }
-    });
-  }
-});
 
 // --- HELPER FUNCTION FOR UPDATING SYSTEM PROMPT ---
 function updateSystemPrompt() {
@@ -607,6 +577,7 @@ function triggerAutoContinue() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
+        credentials: 'include',
     })
     .then((response) => {
         console.log("📥 Auto-continue response status:", response.status);
