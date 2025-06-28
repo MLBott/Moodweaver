@@ -11,7 +11,7 @@ from .orrery import PersonalityOrrery
 from .task_controller import TaskController
 
 logging.basicConfig(
-    level=logging.DEBUG,  # Change to DEBUG for development
+    level=logging.INFO,  # Change to DEBUG for development
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logging.getLogger("httpcore").setLevel(logging.WARNING)
