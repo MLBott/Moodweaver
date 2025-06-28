@@ -1,16 +1,17 @@
 from email.mime import message
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template, session
 from flask_cors import CORS
 import json
 import os
 import time
 import logging
+import re
 from .llm_handlers import anthropic, ollama, openai
 from .orrery import PersonalityOrrery
 from .task_controller import TaskController
 
 logging.basicConfig(
-    level=logging.INFO,  # Change to DEBUG for development
+    level=logging.DEBUG,  # Change to DEBUG for development
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -20,7 +21,11 @@ logging.getLogger("anthropic").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing
+CORS(app, supports_credentials=True)  # Enable Cross-Origin Resource Sharing
+app.secret_key = b'floppyjello2321ztlp'
+
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
 
 # --- Constants and Data Initialization ---
 DATA_DIR = 'data'
@@ -31,6 +36,50 @@ PLOTS_FILE = os.path.join(DATA_DIR, 'plots.json')
 DEFAULT_TRAIT_CONFIG_FILE = os.path.join(DATA_DIR, 'trait_config.json')
 TASK_STATE_FILE = os.path.join(DATA_DIR, 'task_state.json')
 TASK_FRAMEWORK_FILE = os.path.join(DATA_DIR, 'task_framework.json')
+""" with open('data/world_map.json', 'r') as f:
+    world_map_data = json.load(f)
+    # Storing the nodes in a more easily accessible variable
+    chat_nodes = world_map_data.get('nodes', [])
+ """
+
+def create_chat_node_file(chat_id):
+    """Copies the base world_map.json to a new chat-specific node file."""
+    src = os.path.join('data', 'world_map.json')
+    dst = os.path.join('data', f'nodes_{chat_id}.json')
+    if not os.path.exists(dst):
+        with open(src, 'r') as f_src:
+            data = json.load(f_src)
+            # Mark the starting node [1, 1] as visited upon creation
+            if 1 < len(data['nodes']) and 1 < len(data['nodes'][1]) and data['nodes'][1][1]:
+                 data['nodes'][1][1].setdefault('gameplay', {})['visited'] = True
+        with open(dst, 'w') as f_dst:
+            # We only need to store the nodes array, not the whole world object
+            json.dump(data['nodes'], f_dst, indent=2)
+
+def load_chat_nodes(chat_id):
+    path = os.path.join('data', f'nodes_{chat_id}.json')
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_chat_nodes(chat_id, nodes):
+    path = os.path.join('data', f'nodes_{chat_id}.json')
+    with open(path, 'w') as f:
+        json.dump(nodes, f, indent=2)
+
+def get_visited_nodes(nodes):
+    """Gets a list of coordinates for all visited nodes."""
+    visited = []
+    for row in nodes:
+        for node in row:
+            if node and node.get("gameplay", {}).get("visited"):
+                coords = node.get("coords")
+                if coords:
+                    visited.append([coords["x"], coords["y"]])
+    return visited
+
+
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -74,42 +123,126 @@ def save_json(filename, data):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=2)
 
+def get_node_by_coords(x, y, nodes):
+    """Safely retrieves a node from a given node list."""
+    if nodes and 0 <= y < len(nodes) and 0 <= x < len(nodes[y]):
+        return nodes[y][x]
+    return None
+
 # Load default trait config once at startup
 DEFAULT_TRAIT_CONFIG = load_json(DEFAULT_TRAIT_CONFIG_FILE)
 
-# In backend/app.py, REPLACE the entire old chat() function with this:
-
 @app.route('/api/chat', methods=['POST'])
 def chat():
+    # BUG FIX: Add verbose logging to track session state at the start of a request.
+    logger.debug(f"--- NEW REQUEST ---")
+    logger.debug(f"SESSION at start of request: {session.get('player_coords')}")
     data = request.json
     user_message = data.get('message')
+    narrator_message = None
+    current_coords = list(session.get('player_coords', [1, 1])) # from tuple to list
     chat_id = data.get('chat_id')
     character_id = data.get('character_id', None)
     
     settings = load_json(SETTINGS_FILE)
     provider = settings.get('llm_provider', 'ollama')
     chats_data = load_json(CHATS_FILE)
+    chat_nodes = load_chat_nodes(chat_id)
+    INSTRUCTIONAL_CONTINUE_MESSAGE = "[OOC: Continue.]"
     
     chat = next((c for c in chats_data.get('chats', []) if c.get('id') == chat_id), None)
+
+    if not chat:
+        # --- FIX: Generate chat_id only ONCE ---
+        chat_id = str(int(time.time()))
+        create_chat_node_file(chat_id)
+        
+        initial_state = {trait: config["baseline"] for trait, config in DEFAULT_TRAIT_CONFIG.items()}
+        chat = {
+            'id': chat_id, 'title': user_message[:30] if user_message else "New Journey", 'created_at': time.time(),
+            'messages': [], 'character_id': character_id, 'system_prompt': "You are roleplaying as a new character.",
+            'trait_config': DEFAULT_TRAIT_CONFIG, 'personality_state': initial_state,
+            'recent_user_sentiments': [], 'repetitive_sentiment_penalty_active': False
+        }
+        chats_data.setdefault('chats', []).append(chat)
+        session['player_coords'] = (1, 1) # Reset position for new chat
     
+    chat_nodes = load_chat_nodes(chat_id)
+    if not chat_nodes: # Fallback if file creation failed or is empty
+        create_chat_node_file(chat_id)
+        chat_nodes = load_chat_nodes(chat_id)
+
+    # On first message, show the current node description even if not moving
+    current_coords = list(session.get('player_coords', [1, 1]))
+    new_coords = list(current_coords)
+    narrator_message = None
+
+    current_node_data = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+    
+    """ if 'player_coords' not in session:
+        session['player_coords'] = (1, 1) # Store as tuple
+        session.modified = True
+        
     if not chat:
         chat_id = str(int(time.time()))
         initial_state = {trait: config["baseline"] for trait, config in DEFAULT_TRAIT_CONFIG.items()}
         chat = {
-            'id': chat_id, 'title': user_message[:30], 'created_at': time.time(),
-            'messages': [], 'character_id': character_id,
-            'system_prompt': "You are roleplaying as a new character.",
+            'id': chat_id, 'title': user_message[:30], 'created_at': time.time(), 'messages': [],
+            'character_id': character_id, 'system_prompt': "You are roleplaying as a new character.",
             'trait_config': DEFAULT_TRAIT_CONFIG, 'personality_state': initial_state,
-            'recent_user_sentiments': [],
-            'repetitive_sentiment_penalty_active': False
+            'recent_user_sentiments': [], 'repetitive_sentiment_penalty_active': False
         }
         chats_data.setdefault('chats', []).append(chat)
+        chat_id = str(int(time.time()))
+        create_chat_node_file(chat_id)
+        # ...existing chat creation code...
+        # On the very first message of a new chat, describe the starting area.
+        node_data = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
 
-    user_name = data.get('user_name', 'User')
+        if node_data:
+            narrator_message = node_data.get('description_base', 'You find yourself in a new place.')
+ """
 
-    # --- CORRECTED MESSAGE HANDLING ---
+    # --- USER-INITIATED MOVEMENT ---
+    # This section handles movement from user commands like "go east"
+    
+    if current_node_data and "connections" in current_node_data:
+        # Simple direction matching
+        user_move_direction = ""
+        if "go east" in user_message.lower(): user_move_direction = "E"
+        elif "go west" in user_message.lower(): user_move_direction = "W"
+        elif "go north" in user_message.lower(): user_move_direction = "N"
+        elif "go south" in user_message.lower(): user_move_direction = "S"
+        elif "go northeast" in user_message.lower(): user_move_direction = "NE"
+        elif "go northwest" in user_message.lower(): user_move_direction = "NW"
+        elif "go southeast" in user_message.lower(): user_move_direction = "SE"
+        elif "go southwest" in user_message.lower(): user_move_direction = "SW"
+        
+        if user_move_direction and user_move_direction in current_node_data["connections"]:
+            new_coords = current_node_data["connections"][user_move_direction]
+
+    # If the user's command caused a move, update session and set narrator message
+    if new_coords != current_coords:
+        session['player_coords'] = tuple(new_coords) # Store as tuple
+        session.modified = True
+        current_coords = new_coords # Update coords for the rest of this request
+        new_node_data = get_node_by_coords(new_coords[0], new_coords[1], chat_nodes)
+        if new_node_data:
+            narrator_message = new_node_data.get('description_base', 'You arrive.')
+            new_node_data.setdefault('gameplay', {})['visited'] = True
+    
+
+    # --- On first message of a new chat, describe the starting area ---
+    if len(chat['messages']) == 0:
+        start_node = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+        if start_node:
+            narrator_message = start_node.get('description_base', 'You find yourself in a new place.')
+            start_node.setdefault('gameplay', {})['visited'] = True # Ensure start node is visited
+    
+    
     # Append the new user message to the history FIRST.
-    INSTRUCTIONAL_CONTINUE_MESSAGE = "[OOC: Continue.]"
+    user_name = data.get('user_name', 'User')
+    
     if user_message:
         chat['messages'].append({
         'role': 'user',
@@ -117,10 +250,8 @@ def chat():
         'user_name': user_name,  # <-- store user name
         'timestamp': time.time()
     })
-
    
     chat['assistant_message_count'] = chat.get('assistant_message_count', 0) + 1
-
 
     # Now, the conversation history is up-to-date for all subsequent steps.
     conversation = []
@@ -137,7 +268,38 @@ def chat():
                 "content": msg['content']
             })
 
-    
+    if narrator_message:
+        # Always get the latest node data based on current coordinates
+        node_data = get_node_by_coords(session.get('player_coords', [1, 1])[0], session.get('player_coords', [1, 1])[1], chat_nodes)
+        exits_str = ""
+        if node_data and "connections" in node_data:
+            exits = []
+            dir_names = {
+                "N": "north", "S": "south", "E": "east", "W": "west",
+                "NE": "northeast", "NW": "northwest", "SE": "southeast", "SW": "southwest"
+            }
+            for k in node_data["connections"]:
+                exits.append(dir_names.get(k, k))
+            exits_str = ", ".join(exits) if exits else "none"
+            narrator_full = f"{narrator_message}\n[Exits: {exits_str}]"
+            logger.debug(f"NARRATOR MESSAGE (with exits): {narrator_full}")
+        else:
+            narrator_full = narrator_message
+            logger.debug(f"NARRATOR MESSAGE (no exits): {narrator_full}")
+
+        # Insert as system message at the start of the conversation
+        conversation.insert(0, {
+            "role": "system",
+            "content": f"[OOC Narrator: {narrator_full}]"
+        })
+        chat['messages'].append({
+            'role': 'system',
+            'content': f"[OOC Narrator: {narrator_full}]",
+            'timestamp': time.time()
+        })
+
+    else:
+        logger.debug("No narrator_message set for this turn.")
 
     # --- SENTIMENT ANALYSIS ---
     orrery_instance = PersonalityOrrery(trait_config=chat['trait_config'], personality_state=chat['personality_state'],
@@ -179,7 +341,7 @@ def chat():
         # Save the chat data to disk
         save_json(CHATS_FILE, chats_data)
 
-        
+    
 
     # --- TASK CONTROLLER (CTPS) LOGIC ---
     all_task_states = load_json(TASK_STATE_FILE)
@@ -238,6 +400,53 @@ def chat():
     except Exception as e:
         response_text = f"Error: {str(e)}"
 
+
+    # --- LLM Character Movement Parsing ---
+
+
+    # NOW parse the move command AFTER getting the response
+    llm_move_narrator_message = None
+
+    # Debug: Log the raw response to see what we're working with
+    logger.debug(f"DEBUG: Raw LLM response text:\n'{response_text}'\n")
+
+    # Look for the move command in the response
+    move_match = re.search(
+        r'@MOVE:\s*(northeast|northwest|southeast|southwest|north|south|east|west)',
+        response_text,
+        re.IGNORECASE
+    )
+
+    
+
+    if move_match:
+        move_direction_str = move_match.group(1).strip().upper()
+        response_text = response_text.replace(move_match.group(0), "").strip()
+
+        logger.debug(f"DEBUG: current_coords before LLM movement parsing: {current_coords}")
+        logger.debug(f"DEBUG: session coords before LLM movement parsing: {session.get('player_coords')}")
+        logger.debug(f"LLM initiated move command found. Direction: '{move_direction_str}'")
+        logger.debug(f"Cleaned response text: '{response_text}'")
+        
+        char_current_node_data = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+        if char_current_node_data and "connections" in char_current_node_data:
+            connections = char_current_node_data["connections"]
+            dir_map = {"NORTH": "N", "SOUTH": "S", "EAST": "E", "WEST": "W", "NORTHEAST": "NE", "NORTHWEST": "NW", "SOUTHEAST": "SE", "SOUTHWEST": "SW"}
+            move_key = dir_map.get(move_direction_str)
+            
+            if move_key and move_key in connections:
+                llm_new_coords = connections[move_key]
+                session['player_coords'] = tuple(llm_new_coords)
+                session.modified = True
+                current_coords = llm_new_coords
+                
+                new_node_data = get_node_by_coords(llm_new_coords[0], llm_new_coords[1], chat_nodes)
+                if new_node_data:
+                    llm_move_narrator_message = new_node_data.get('description_base', 'You arrive at a new location.')
+                    new_node_data.setdefault('gameplay', {})['visited'] = True
+
+
+    # --- ENVIRONMENTAL SENTIMENT ANALYSIS ---
     try:
         # Use the same handler as above, or create a new one if needed
         if provider == 'openai':
@@ -263,17 +472,62 @@ def chat():
         logger.debug(f"Environmental sentiment analysis failed: {e}\n")
 
     # ...then save the updated personality state as usual...
+
     chat['personality_state'] = orrery_instance.get_trait_summary()
+
+    final_narrator_message = llm_move_narrator_message or narrator_message
+    
+    if final_narrator_message:
+        node_data = get_node_by_coords(session['player_coords'][0], session['player_coords'][1], chat_nodes)
+        if node_data and "connections" in node_data:
+            dir_names = {"N": "north", "S": "south", "E": "east", "W": "west", 
+                         "NE": "northeast", "NW": "northwest", "SE": "southeast", "SW": "southwest"}
+            exits = [dir_names.get(k, k) for k in node_data["connections"]]
+            exits_str = ", ".join(exits) if exits else "none"
+            final_narrator_message += f"\n[Exits: {exits_str}]"
+
     
     # --- SAVE STATE ---
     chat['messages'].append({'role': 'assistant', 'content': response_text, 'timestamp': time.time()})
     chat['personality_state'] = orrery_instance.get_trait_summary()
     all_task_states[chat_id] = current_task_state
     
+    if final_narrator_message:
+        chat['messages'].append({
+            'role': 'system',
+            'content': f"[OOC Narrator: {final_narrator_message}]",
+            'timestamp': time.time()
+        })
+    
     save_json(CHATS_FILE, chats_data)
     save_json(TASK_STATE_FILE, all_task_states)
+
+    """ visited_nodes = get_visited_nodes(chat_nodes) """
+    visited_nodes = get_visited_nodes(chat_nodes)
+
+    api_response = {
+        'chat_id': chat_id,
+        'response': response_text,
+        'current_coords': list(current_coords),
+        'visited_nodes': visited_nodes,
+        'narrator_message': final_narrator_message or ""
+    }
+    """ api_response = {
+        'chat_id': chat_id,
+        'response': response_text,
+        'current_coords': list(current_coords),
+        'visited_nodes': visited_nodes
+    }
+
+    if final_narrator_message:
+        api_response['narrator_message'] = final_narrator_message
+        chat['messages'].append({
+            'role': 'system',
+            'content': f"[OOC Narrator: {final_narrator_message}]",
+            'timestamp': time.time()
+        }) """
     
-    return jsonify({'chat_id': chat_id, 'response': response_text})
+    return jsonify(api_response)
 
 # --- New API Route for Editing Messages ---
 @app.route('/api/chat/<chat_id>/edit-message', methods=['PUT'])
@@ -328,11 +582,13 @@ def summarize_chat(chat_id):
     settings = load_json(SETTINGS_FILE)
     provider = settings.get('llm_provider', 'ollama')
     summary_prompt = (
-        "Convert this paragraph into ultra-compact shorthand using abbreviations, symbols, and minimal syntax "
-        "while preserving major details and relationship. Use techniques like: acronyms, mathematical symbols "
-        "(→, ∵, ∴, &, +, =), but *NO EMOJIS*, drop articles/prepositions where clear, use punctuation as operators, compress similar "
-        "concepts. Ensure an LLM can fully reconstruct the original meaning. "
-        "Do not include OOC or meta commentary. Only summarize the story and character actions/dialogue.\n\n"
+        "Create a concise timeline summary of this roleplay conversation. Focus on: "
+        "key events & actions by characters, important dialogue/decisions, relationship "
+        "developments/emotional moments, plot progression. Careful attention to correct association of who with what.Format as brief bullet points "
+        "or chronological entries. Remove all OOC commentary, formatting symbols "
+        "(*italics*, **bold**), & redundant descriptions. Compress similar actions. Use "
+        "abbreviations & symbols (→, &, +) where clear. Drop articles/prepositions. Avoid 'you' descrip, use 'user' or user's 'user_name'."
+        "Goal: preserve story continuity for context while drastically reducing token count.\n\n"
         f"{text}"
     )
     summary_text = ""
@@ -367,6 +623,16 @@ def summarize_chat(chat_id):
 
 @app.route('/')
 def serve_frontend():
+    return send_from_directory('../frontend', 'index.html')
+
+def index():
+    """
+    Initializes the user's session with starting coordinates
+    and serves the main HTML page of the frontend.
+    """
+    # Set the starting coordinates when the user first loads the app
+    session['player_coords'] = (1, 1) # Store as tuple
+    logger.debug(f"Initialized session with player_coords: {session['player_coords']}")
     return send_from_directory('../frontend', 'index.html')
 
 @app.route('/<path:path>')
@@ -406,6 +672,9 @@ def handle_chats():
         
         chats_data['chats'] = [c for c in chats_data.get('chats', []) if c.get('id') != chat_id]
         save_json(CHATS_FILE, chats_data)
+        nodes_path = os.path.join('data', f'nodes_{chat_id}.json')
+        if os.path.exists(nodes_path):
+            os.remove(nodes_path)
         return jsonify({"status": "success"})
 
 @app.route('/api/characters', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -538,6 +807,43 @@ def trigger_read_body_language(chat_id):
     save_json(CHATS_FILE, chats_data)
 
     return jsonify({"success": True, "message": "Body language event triggered.\n"})
+
+@app.route('/api/debug/world-map')
+def debug_world_map(chat_id):
+    """Debug route to inspect world map connections for a SPECIFIC chat."""
+    chat_nodes = load_chat_nodes(chat_id)
+    if not chat_nodes:
+        return jsonify({"error": f"No node file found for chat_id: {chat_id}"}), 404
+        
+    debug_info = []
+    for y, row in enumerate(chat_nodes):
+        for x, node in enumerate(row):
+            if node:
+                node_info = {
+                    'coords': [x, y],
+                    'description': node.get('description_base', 'No description')[:50] + '...',
+                    'connections': node.get('connections', {}),
+                    'gameplay': node.get('gameplay', {}) # Show visited status
+                }
+                debug_info.append(node_info)
+    return jsonify(debug_info)
+
+@app.route('/api/debug/node/<int:x>/<int:y>')
+def debug_node(chat_id,x, y):
+    """Debug a specific node for a SPECIFIC chat."""
+    chat_nodes = load_chat_nodes(chat_id)
+    if not chat_nodes:
+        return jsonify({"error": f"No node file found for chat_id: {chat_id}"}), 404
+
+    node = get_node_by_coords(x, y, chat_nodes)
+    if not node:
+        return jsonify({'error': 'Node not found or is null'}), 404
+    
+    return jsonify({
+        'coords': [x, y],
+        'node_data': node
+    })
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
