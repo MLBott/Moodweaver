@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moodweaver</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2>Moodweaver</h2>
+          <button id="newChatBtn" class="primary-btn">New Chat</button>
+          <button id="settingsBtn" class="secondary-btn">Settings</button>
+        </div>
+
+        <div class="mood-section">
+          <h3>Character Mood</h3>
+          <div class="mood-face-row">
+            <span class="mood-face yellow outer" title="Joy, Excitement, Energy, Hope, Humor, Openness">
+              <img src="img/face_yellow.png" alt="Yellow Mood" />
+            </span>
+            <span class="mood-face blue" title="Sadness, Melancholy, Withdrawal, Fatigue, Rumination, Guilt, Shame">
+              <img src="img/face_blue.png" alt="Blue Mood" />
+            </span>
+            <span class="mood-face purple" title="Fear, Anxiety, Tension, Paranoia, Skeptical, Confusion">
+              <img src="img/face_purple.png" alt="Purple Mood" />
+            </span>
+            <span class="mood-face red outer" title="Anger, Aggression, Intensity, Grudge, Pride, Domineering, Decisiveness">
+              <img src="img/face_red.png" alt="Red Mood" />
+          </div>
+          <div class="mood-divider">
+            <svg width="80" height="16" viewBox="0 0 80 16">
+              <path d="M5,15 Q40,-10 75,15" fill="none" stroke="#444" stroke-width="2" stroke-dasharray="5,5"/>
+            </svg>
+          </div>
+          <div class="mood-icon-container">
+            <img id="bodyIconImg" src="img/body_icon_f.png" class="mood-icon" alt="Character Mood Icon"/>
+            <div id="moodOverlay" class="mood-overlay"></div>
+            <div id="bodyLanguageOverlay" class="body-language-overlay">
+              <span id="bodyLanguageText"></span>
+            </div>
+          </div>
+          <div class="body-toggle-wrapper">
+            <label class="body-toggle-label">
+              <input type="checkbox" id="bodyGenderToggle" checked/>
+              <span class="body-toggle-slider"></span>
+              <span class="body-toggle-text">♂</span>
+              <span class="body-toggle-text">♀</span>
+              
+            </label>
+          </div>
+        </div>
+
+        <div class="chat-list">
+          <h3>Recent Chats</h3>
+          <ul id="chatList"></ul>
+        </div>
+        <div class="character-section">
+          <h3>Characters</h3>
+          <button id="newCharacterBtn" class="secondary-btn">
+            New Character
+          </button>
+          <ul id="characterList"></ul>
+        </div>
+
+        <div id="world-map-panel">
+          <div id="world-map-inner" style="position: absolute; width: 100%; height: 100%; left: 0; top: 0; transition: transform 0.2s;">
+            <img id="world-map-img" src="img/world_map.png" alt="World Map" style="width: 100%; height: 100%; display: block;">
+            <canvas id="world-map-fog" width="270" height="270" style="position: absolute; left: 0; top: 0; pointer-events: none;"></canvas>
+          </div>
+          <div id="player-dot" style="position:absolute; transform:translate(-6%,-40%);">
+            <img src="img/player_icon1.png" alt="Player" style="width:15%;height:15%;filter:drop-shadow(0 0 8px rgb(255, 241, 120));">
+          </div>
+        </div>
+
+        <div class="player-icon-selector-wrapper">
+          <label for="playerIconSelect" style="display:block; margin-bottom:4px;">Player Icon:</label>
+          <select id="playerIconSelect" style="width:100%;">
+            <option value="img/player_icon1.png">Dagger</option>
+            <option value="img/player_icon2.png">Star</option>
+            <option value="img/player_icon3.png">Pin</option>
+          </select>
+        </div>
+
+        <div class="dice-section">
+          <h3>Dice Roller</h3>
+          <div></div>
+          <div class="dice-grid">
+            <button id="roll6Btn" class="dice-btn" title="Roll d6">
+              <img src="img/d6.png" alt="d6" class="dice-icon" />
+            </button>
+            <button id="roll20Btn" class="dice-btn" title="Roll d20">
+              <img src="img/d20.png" alt="d20" class="dice-icon" />
+            </button>
+            <button id="roll10Btn" class="dice-btn" title="Roll d10">
+              <img src="img/d10.png" alt="d10" class="dice-icon" />
+            </button>
+            <button id="roll2Btn" class="dice-btn" title="Roll d2">
+              <img src="img/d2.png" alt="d2" class="dice-icon" />
+            </button>
+          </div>
+        </div>
+
+      
+        
+        <!-- <div class="form-group">
+          <label for="plotSelector">Select Plot:</label>
+          <select id="plotSelector" name="plotSelector">
+            <option value="">-- Select a Plot --</option>
+          </select>
+          <button id="selectPlotBtn" class="primary-btn">Select Plot</button>
+        </div> -->
+        <!-- <div class="system-prompt-section">
+          <h3>System Prompt</h3>
+          <textarea
+            id="systemPrompt"
+            rows="5"
+            placeholder="System prompt will appear here..."
+          ></textarea>
+          <button id="updateSystemPromptBtn" class="primary-btn">
+            Update Prompt
+          </button>
+        </div> -->
+      </div>
+
+      <div class="main-content">
+        <div id="chatHeader" class="chat-header">
+          <h2 id="chatTitle">New Chat</h2>
+          <div id="activeModeDisplay"></div>
+        </div>
+
+        <button id="summarizeBtn">Summarize Earlier Messages</button>
+
+        <div id="chatMessages" class="chat-messages"></div>
+
+        <input type="text" id="userNameInput" placeholder="Your Name" />
+
+        <div class="chat-input-wrapper">
+          <div class="chat-input">
+            <textarea
+              id="userInput"
+              placeholder="Type your message here..."
+            ></textarea>
+            <button id="sendBtn" class="primary-btn">Send</button>
+
+            <button
+              id="autoContinueBtn"
+              class="secondary-btn auto-continue-btn"
+              title="Auto-continue generation"
+            >
+              <i id="autoContinueIcon" class="fa-regular fa-hand-pointer"></i>
+            </button>
+          </div>
+
+          <div class="auto-continue-toggle">
+            <label for="autoContinueToggle">Auto-Continue:</label>
+            <label class="switch">
+              <input type="checkbox" id="autoContinueToggle" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="settingsModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Settings</h2>
+          <form id="settingsForm" onsubmit="return false;">
+            <div class="form-group">
+              <label for="llmProvider">LLM Provider:</label>
+              <select id="llmProvider" name="llmProvider">
+                <option value="ollama">Ollama (Local)</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+              </select>
+            </div>
+            <div class="form-group" id="ollamaSettings">
+              <label for="ollamaUrl">Ollama URL:</label>
+              <input
+                type="text"
+                id="ollamaUrl"
+                name="ollamaUrl"
+                placeholder="http://localhost:11434"
+              />
+              <label for="ollamaModel">Model:</label>
+              <input
+                type="text"
+                id="ollamaModel"
+                name="ollamaModel"
+                placeholder="llama3"
+              />
+            </div>
+            <div class="form-group" id="openaiSettings" style="display: none">
+              <label for="openaiKey">OpenAI API Key:</label>
+              <input type="password" id="openaiKey" name="openaiKey" />
+              <label for="openaiModel">Model:</label>
+              <input
+                type="text"
+                id="openaiModel"
+                name="openaiModel"
+                placeholder="gpt-4.1"
+              />
+            </div>
+            <div
+              class="form-group"
+              id="anthropicSettings"
+              style="display: none"
+            >
+              <label for="anthropicKey">Anthropic API Key:</label>
+              <input type="password" id="anthropicKey" name="anthropicKey" />
+              <label for="anthropicModel">Model:</label>
+              <input
+                type="text"
+                id="anthropicModel"
+                name="anthropicModel"
+                placeholder="claude-3-5-haiku-latest"
+              />
+            </div>
+            <div class="form-group">
+              <label for="temperature">Temperature:</label>
+              <input
+                type="range"
+                id="temperature"
+                name="temperature"
+                min="0"
+                max="1"
+                step="0.1"
+                value="0.7"
+              />
+              <span id="temperatureValue">0.7</span>
+            </div>
+            <fieldset>
+              <legend>Support Sentiment LLM Settings (Optional)</legend>
+              
+              <div class="form-group">
+                <label for="supportLlmProvider">Provider:</label>
+                <select id="supportLlmProvider" name="supportLlmProvider">
+                  <option value="">(Same as main)</option>
+                  <option value="ollama">Ollama (Local)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                </select>
+              </div>
+              
+              <div class="form-group" id="supportOpenaiSettings">
+                <label for="supportOpenaiKey">OpenAI API Key:</label>
+                <input type="password" id="supportOpenaiKey" name="supportOpenaiKey" />
+                <label for="supportModel">Model:</label>
+                <input type="text" id="supportModel" name="supportModel" placeholder="gpt-4.1" />
+              </div>
+              
+              <div class="form-group" id="supportAnthropicSettings">
+                <label for="supportAnthropicKey">Anthropic API Key:</label>
+                <input type="password" id="supportAnthropicKey" name="supportAnthropicKey" />
+                <label for="supportModelAnthropic">Model:</label>
+                <input type="text" id="supportModelAnthropic" name="supportModelAnthropic" placeholder="claude-3-haiku-20240307" />
+              </div>
+            </fieldset>
+            <button type="submit" class="primary-btn">Save Settings</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="characterModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2 id="characterModalTitle">Create Character</h2>
+          <form id="characterForm" onsubmit="return false;">
+            <input type="hidden" id="characterId" />
+            <div class="form-group">
+              <label for="characterName">Name:</label>
+              <input type="text" id="characterName" required />
+            </div>
+            <div class="form-group">
+              <label for="characterDescription">Description:</label>
+              <textarea
+                id="characterDescription"
+                required
+                rows="5"
+                placeholder="Include personality, background, and speech style..."
+              ></textarea>
+            </div>
+            <button type="submit" class="primary-btn">Save Character</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="world-map-zoom-overlay" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:9999; align-items:center; justify-content:center;">
+      <div id="world-map-zoom-inner" style="position:relative; width:600px; height:600px; background:#222; border-radius:12px; box-shadow:0 0 32px #000;">
+        <img id="world-map-zoom-img" src="img/world_map.png" alt="World Map" style="width:100%; height:100%; display:block;">
+        <canvas id="world-map-zoom-fog" width="600" height="600" style="position:absolute; left:0; top:0; pointer-events:none;"></canvas>
+        <div id="player-dot-zoom" style="position:absolute; display:flex;">
+            <img src="img/player_icon1.png" alt="Player" style="width: 12%; height: 12%; transform: translate(-8%, -90); filter:drop-shadow(0 0 16px rgb(243, 225, 125));">
+        </div>
+      </div>
+    </div>
+    
+
+    <script src="js/chat.js"></script>
+    <script src="js/rpg.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
