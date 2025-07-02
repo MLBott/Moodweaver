@@ -66,7 +66,7 @@ Characters aren't just reactive - they have **agency and goals**:
 Powered by `PersonalityOrrery` engine for authentic emotional responses that actually matter to gameplay.
 
 ### 🗺️ **Interactive World System**
-- **Exploration Commands**: The character can LOOK at the available directions to go around them. And can MOVE in any available direction. 
+- **Exploration Commands**: The character can LOOK at the available directions around them. And can MOVE in any available direction. 
     - User uses different commands "@LOOK: (direction)" and "I go (direction)"
 - **Persistent World Changes**: Actions permanently affect locations. Revisit areas to see lasting effects of previous interactions
     - In area: "*Asuka takes the bottle off the shelf, guzzles it, and slams it on the bar.*" 
