@@ -12,7 +12,7 @@ def build_system_prompt(base_prompt: str, personality_context: str, task_prompt:
 
     # --- GLOBAL INSTRUCTION: NO HTML ---
     prompt_parts.append(
-        "GLOBAL: NO HTML/code/fmt in resp. Plain txt only."
+        "GLOBAL: NO HTML/code/fmt in resp. Plain txt only. Character can @LOOK for full 360 of surrounding area, @ resp end. Character moves adjacent areas via @MOVE: direction @ resp end. @MOVE = only mvmt method via 'Exits'."
     )
 
     # Dynamic context is added next.
