@@ -17,7 +17,7 @@
 
 ## 🌟 What Makes Moodweaver Special?
 
-Moodweaver brings AI characters to life with dynamically scripted emotions, evolving personalities, and dynamic storytelling.
+Moodweaver brings AI characters to life with dynamically scripted emotions, evolving personalities, and immersive storytelling.
 
 ### 🧠 **The Personality Orrery**
 Our emotion engine gives AI characters persistent, evolving emotional states:
@@ -25,12 +25,14 @@ Our emotion engine gives AI characters persistent, evolving emotional states:
 - **Sentiment Analysis**: Characters genuinely react to praise, criticism, flirtation, and hostility  
 - **Cathartic Events**: Witness dramatic personality shifts like "Overflowing Joy" or "Paranoid Breakdown"
 - **Environmental Awareness**: Characters' surroundings have some effect on their personality
+- **Anti-Repetition System**: Characters become bored by repetitive comments, encouraging creative interactions
 
 ### 🎯 **Intelligent Task System**
 Characters aren't just reactive - they have **agency and goals**:
 - AI-driven story controller creates compelling narrative arcs
 - Task-based personality guidance keeps characters motivated
 - Rich narrative framework with core tensions and hooks
+- Progress tracking and priority management for character objectives
 
 ---
 
@@ -63,31 +65,42 @@ Characters aren't just reactive - they have **agency and goals**:
 ## The Magic:
 Powered by `PersonalityOrrery` engine for authentic emotional responses that actually matter to gameplay.
 
+### 🗺️ **Interactive World System**
+- **Exploration Commands**: The character can LOOK at the available directions to go around them. And can MOVE in any available direction. 
+    - User uses different commands "@LOOK: <direction>" and "I go <direction>"
+- **Persistent World Changes**: Actions permanently affect locations. Revisit areas to see lasting effects of previous interactions
+    - In area: "*Asuka takes the bottle off the shelf, guzzles it, and slams it on the bar.*" 
+    - Returning to area later: "*An empty bottle sits on the bar.*"
+- **Dynamic Environment**: Areas blend with neighboring locations for immersive descriptions
+
 ### 🎲 **RPG Tools**
 - Built-in dice roller (d6, d10, d20, d2)
-- Predefined plot structures
+- Predefined plot structures ("Stranger-to-Besties", "Odd Couple")
 - Character creation & management
 - Auto-continue AI conversation responses
-- Maps:
-  * Overland large area map
-  * Interior maps
-  * Each location of a map is blended in with neighbor areas in its description.
-    - Example: "Hearing a babbling brook from another area nearby."
-    - Example: "Seeing mountains peeking over the treeline from the East."
+- Interactive maps with blended area descriptions
 
 </td>
 <td width="50%">
 
 ### 🔌 **Multi-LLM Support**
-- **OpenAI** (GPT-4.1)
-- **Anthropic** (Claude-3.5-Sonnet)
-- *Coming Soon: Google Gemini, OpenRouter, Ollama (local)
+- **OpenAI** (GPT-4.1) - Recommended
+- **Anthropic** (Claude-3.5-Sonnet) - Recommended
+- **Ollama** (Local models)
+- *Coming Soon: Google Gemini, OpenRouter*
 
-### 💾 **Smart Memory**
-- Long-term conversation context
-- Intelligent summarization
-- Persistent character states
-- Chat history management
+### 💾 **Smart Memory & Chat Management**
+- Long-term conversation context with intelligent summarization
+- Persistent character states across sessions
+- Chat history management with load/delete functionality
+- Message editing capabilities
+- Formatted display with novel-like styling
+
+### ⚙️ **Advanced Configuration**
+- Dual LLM setup (main + support for sentiment analysis)
+- Customizable API endpoints and temperature settings
+- Character mood indicators with male/female silhouettes
+- Triggerable events through UI interactions
 
 </td>
 </tr>
@@ -115,7 +128,12 @@ Setup your LLM provider in settings interface
 ### 🔑 **API Keys Required**
 - OpenAI API key for GPT models
 - Anthropic API key for Claude models
-- ~~Or run locally with Ollama (no API key needed)~~ Soon
+- Or run locally with Ollama (no API key needed)
+
+### 🤖 **Recommended Models**
+- **OpenAI**: `gpt-4.1` (best performance)
+- **Anthropic**: `claude-3-5-sonnet` (excellent reasoning)
+- **Local**: Any Ollama-compatible model
 
 ---
 
@@ -130,25 +148,54 @@ Setup your LLM provider in settings interface
     
     [Paranoia: ↑ | Trust: ↓ | Mood: Defensive]
 
-👤 User: "I'm here if you want to talk."
+👤 User: "@LOOK: north"
 
-🤖 AI: *shoulders relax slightly, glances up*
-    "I... maybe I have been overthinking things. 
-    It's just hard to know who to trust anymore."
+🤖 AI: *glances toward the northern path*
+    "There's a winding trail leading up into the hills. 
+    I can hear water flowing from somewhere beyond the trees..."
     
-    [Trust: ↑ | Paranoia: ↓ | Mood: Cautiously Hopeful]
+    [Curiosity: ↑ | Mood: Intrigued]
+
+👤 User: "I go north"
+
+🤖 AI: *follows reluctantly, footsteps crunching on fallen leaves*
+    "This place feels... different. Like someone was here recently."
+    
+    [Paranoia: ↑ | Environmental Tension: ↑]
 ```
 ![MWpic2](https://github.com/user-attachments/assets/be7251aa-7ed1-42d9-bb46-a1c658bc58b1)
 
 ---
+
+## 🌟 Key Gameplay Features
+
+### 🎭 **Character Agency**
+- AI characters have their own goals and motivations
+- Task-driven behavior creates dynamic storytelling
+- Characters can initiate actions and drive the narrative forward
+
+### 🗺️ **World Exploration**
+- Use `@LOOK: <direction>` to scout ahead
+- Move with `I go <direction>` to explore
+- Every action leaves permanent marks on the world
+- Environmental storytelling through area descriptions
+
+### 🎲 **Chance & Choice**
+- Built-in dice rolling for skill checks and random events
+- Multiple plot frameworks to guide your story
+- Auto-continue feature keeps the action flowing
+
+---
+
 ## 🫥 Todo
 
 - Modular character import/export
 - Custom trait/emotion saved configurations
 - Premade characters with custom traits/emotions
-- Gemini, OpenRouter, Ollama support
-- UI improvements
-- Light/Dark themes
+- Google Gemini and OpenRouter support
+- UI improvements and themes
+- Light/Dark mode toggle
+- Enhanced world map visualization
 
 ---
 
@@ -159,7 +206,8 @@ Setup your LLM provider in settings interface
 | Frontend | Backend | AI Integration |
 |----------|---------|----------------|
 | JavaScript | Python | OpenAI API |
-| HTML | Flask | Anthropic API |
+| HTML/CSS | Flask | Anthropic API |
+| Dynamic UI | PersonalityOrrery | Ollama Support |
 
 </div>
 
@@ -170,6 +218,7 @@ Setup your LLM provider in settings interface
 - [🏗️ **Setup Guide**](docs/setup.md) - Get started in minutes
 - [🎭 **Character Creation**](docs/characters.md) - Design compelling AI personas  
 - [🧠 **Personality System**](docs/personality.md) - Deep dive into the Orrery
+- [🗺️ **World System**](docs/world.md) - Interactive environments and exploration
 - [⚙️ **Configuration**](docs/config.md) - Customize your experience
 - [🔧 **API Reference**](docs/api.md) - Developer documentation
 
