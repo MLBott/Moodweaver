@@ -108,7 +108,7 @@ def process_llm_response_command(response_text: str, current_coords: list, chat_
         response_text = response_text.replace(look_match.group(0), "").strip()
         logger.debug("LLM used @LOOK command")
 
-    move_match = re.search(r'@MOVE:\s*(northeast|northwest|southeast|southwest|north|south|east|west)', response_text, re.IGNORECASE)
+    move_match = re.search(r'@MOVE:?\s*(northeast|northwest|southeast|southwest|north|south|east|west)', response_text, re.IGNORECASE)
 
     if not move_match:
         return response_text, new_coords, llm_used_look
