@@ -19,7 +19,7 @@ from . import display_formatter as df
 from . import summarizer
 
 logging.basicConfig(
-    level=logging.DEBUG,  # Change to DEBUG for development
+    level=logging.INFO,  # Change to DEBUG for development
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logging.getLogger("hpack").setLevel(logging.WARNING)
