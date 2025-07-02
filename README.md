@@ -67,7 +67,7 @@ Powered by `PersonalityOrrery` engine for authentic emotional responses that act
 
 ### 🗺️ **Interactive World System**
 - **Exploration Commands**: The character can LOOK at the available directions to go around them. And can MOVE in any available direction. 
-    - User uses different commands "@LOOK: <direction>" and "I go <direction>"
+    - User uses different commands "@LOOK: (direction)" and "I go (direction)"
 - **Persistent World Changes**: Actions permanently affect locations. Revisit areas to see lasting effects of previous interactions
     - In area: "*Asuka takes the bottle off the shelf, guzzles it, and slams it on the bar.*" 
     - Returning to area later: "*An empty bottle sits on the bar.*"
