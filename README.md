@@ -163,7 +163,7 @@ Setup your LLM provider in settings interface
     
     [Paranoia: ↑ | Environmental Tension: ↑]
 ```
-![MWpic2](https://github.com/user-attachments/assets/be7251aa-7ed1-42d9-bb46-a1c658bc58b1)
+![MWpic2](https://github.com/user-attachments/assets/00a389ab-de0d-4642-94e4-73ed3e6ef008)
 
 ---
 
