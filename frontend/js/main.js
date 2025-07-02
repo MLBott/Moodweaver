@@ -27,6 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Loading settings...");
     loadSettings();
 
+    // Initialize summarize button (hidden by default)
+    const summarizeBtn = document.getElementById("summarizeBtn");
+    if (summarizeBtn) {
+      summarizeBtn.style.display = "none";
+    }
+
     // Event listeners for buttons
     console.log("Setting up event listeners...");
 
@@ -683,6 +689,10 @@ function toggleProviderSettings() {
     provider === "openai" ? "block" : "none";
   document.getElementById("anthropicSettings").style.display =
     provider === "anthropic" ? "block" : "none";
+  document.getElementById("geminiSettings").style.display =
+    provider === "gemini" ? "block" : "none";
+  document.getElementById("perplexitySettings").style.display =
+    provider === "perplexity" ? "block" : "none";
 }
 
 // Settings functions
@@ -694,92 +704,115 @@ function openSettingsModal() {
 function loadSettings() {
   console.log("Fetching settings from API:", `${API_BASE_URL}/settings`);
   fetch(`${API_BASE_URL}/settings`)
-    .then((response) => {
-      console.log("Settings API response status:", response.status);
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((settings) => {
       console.log("Settings loaded:", settings);
-      document.getElementById("llmProvider").value =
-        settings.llm_provider || "ollama";
-      document.getElementById("ollamaUrl").value =
-        settings.ollama_url || "http://localhost:11434";
-      document.getElementById("ollamaModel").value =
-        settings.default_model || "llama3";
-      document.getElementById("openaiKey").value = settings.api_keys?.openai || "";
-      document.getElementById("anthropicKey").value =
-        settings.api_keys?.anthropic || "";
+      const provider = settings.llm_provider || "ollama";
+      
+      document.getElementById("llmProvider").value = provider;
+      document.getElementById("ollamaUrl").value = settings.ollama_url || "http://localhost:11434";
       document.getElementById("temperature").value = settings.temperature || 0.7;
-      document.getElementById("temperatureValue").textContent =
-        settings.temperature || 0.7;
+      document.getElementById("temperatureValue").textContent = settings.temperature || 0.7;
 
+      // FIX: Load API keys using the correct object keys
+      document.getElementById("openaiKey").value = settings.api_keys?.openai || "";
+      document.getElementById("anthropicKey").value = settings.api_keys?.anthropic || "";
+      document.getElementById("geminiKey").value = settings.api_keys?.gemini_key || ""; // Corrected from 'gemini' to 'gemini_key'
+      document.getElementById("perplexityKey").value = settings.api_keys?.perplexity || "";
+
+      // FIX: Only populate the model input for the currently active provider
+      if (provider === "ollama") {
+        document.getElementById("ollamaModel").value = settings.default_model || "llama3";
+      } else if (provider === "openai") {
+        document.getElementById("openaiModel").value = settings.default_model || "gpt-4.1";
+      } else if (provider === "anthropic") {
+        document.getElementById("anthropicModel").value = settings.default_model || "claude-3-5-haiku-latest";
+      } else if (provider === "gemini") {
+        document.getElementById("geminiModel").value = settings.default_model || "gemini-2.5-flash";
+      } else if (provider === "perplexity") {
+        document.getElementById("perplexityModel").value = settings.default_model || "sonar";
+      }
+      
+      // Load support LLM settings
+      if (settings.support_llm) {
+        document.getElementById("supportLlmProvider").value = settings.support_llm.provider || provider;
+        document.getElementById("supportLlmModel").value = settings.support_llm.model || settings.default_model || "";
+      } else {
+        // Default to main provider settings if no support LLM configured
+        document.getElementById("supportLlmProvider").value = provider;
+        document.getElementById("supportLlmModel").value = settings.default_model || "";
+      }
+      
+      // This will now correctly show the Gemini settings panel
       toggleProviderSettings();
     })
     .catch((error) => {
       console.error("Error loading settings:", error);
-      showNotification(
-        "Failed to load settings. Is the backend running at " +
-          API_BASE_URL +
-          "?",
-        "error"
-      );
+      showNotification("Failed to load settings. Is the backend running?", "error");
     });
 }
 
 function saveSettings(e) {
-  console.log("Saving settings...");
   if (e) e.preventDefault();
 
   const provider = document.getElementById("llmProvider").value;
-  const settings = {
-    llm_provider: provider,
-    ollama_url: document.getElementById("ollamaUrl").value,
-    temperature: parseFloat(document.getElementById("temperature").value),
-    api_keys: {
-      openai: document.getElementById("openaiKey").value,
-      anthropic: document.getElementById("anthropicKey").value,
-    },
-  };
-
-  // Set the default model based on provider
+  let model = "";
   if (provider === "ollama") {
-    settings.default_model = document.getElementById("ollamaModel").value;
+    model = document.getElementById("ollamaModel").value;
   } else if (provider === "openai") {
-    settings.default_model =
-      document.getElementById("openaiModel").value || "gpt-4.1";
+    model = document.getElementById("openaiModel").value;
   } else if (provider === "anthropic") {
-    settings.default_model =
-      document.getElementById("anthropicModel").value ||
-      "claude-3-5-haiku-latest";
+    model = document.getElementById("anthropicModel").value;
+  } else if (provider === "gemini") {
+    model = document.getElementById("geminiModel").value;
+  } else if (provider === "perplexity") {
+    model = document.getElementById("perplexityModel").value;
   }
 
-  settings.support_llm = {
-    provider: document.getElementById("supportLlmProvider").value,
-    api_keys: {
-      openai: document.getElementById("supportOpenaiKey").value,
-      anthropic: document.getElementById("supportAnthropicKey").value,
-    },
-    model: document.getElementById("supportModel").value,
-  };
+  // Always duplicate main provider/model into support fields
+  document.getElementById("supportLlmProvider").value = provider;
+  document.getElementById("supportLlmModel").value = model;
 
-  console.log("Sending settings to API:", settings);
+  // First fetch current settings to preserve support_llm.api_keys
+  fetch(`${API_BASE_URL}/settings`)
+    .then((response) => response.json())
+    .then((currentSettings) => {
+      const settings = {
+        llm_provider: provider,
+        ollama_url: document.getElementById("ollamaUrl").value,
+        temperature: parseFloat(document.getElementById("temperature").value),
+        api_keys: {
+          openai: document.getElementById("openaiKey").value,
+          anthropic: document.getElementById("anthropicKey").value,
+          perplexity: document.getElementById("perplexityKey").value,
+          gemini_key: document.getElementById("geminiKey").value,
+        },
+        support_llm: {
+          provider: provider,
+          model: model,
+          // Preserve existing support_llm api_keys if they exist
+          api_keys: currentSettings.support_llm?.api_keys || {
+            openai: "",
+            anthropic: "",
+            perplexity: "",
+            gemini_key: ""
+          }
+        },
+        default_model: model
+      };
 
-  fetch(`${API_BASE_URL}/settings`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(settings),
-  })
-    .then((response) => {
-      console.log("Settings save response status:", response.status);
-      return response.json();
+      return fetch(`${API_BASE_URL}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
     })
+    .then((response) => response.json())
     .then((data) => {
-      console.log("Settings saved successfully:", data);
       document.getElementById("settingsModal").style.display = "none";
       showNotification("Settings saved successfully");
     })
     .catch((error) => {
-      console.error("Error saving settings:", error);
       showNotification("Failed to save settings. Is the backend running?", "error");
     });
 }

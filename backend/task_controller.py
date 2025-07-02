@@ -1,17 +1,14 @@
 import json
 import os
+import re
 import logging
-from .llm_handlers import openai  # We'll use the OpenAI handler for this
+from .llm_handlers import anthropic, gemini, ollama, openai, perplexity  # We'll use the OpenAI handler for this
 
 # Define paths for our data files
 DATA_DIR = 'data'
 TASK_STATE_FILE = os.path.join(DATA_DIR, 'task_state.json')
 TASK_FRAMEWORK_FILE = os.path.join(DATA_DIR, 'task_framework.json')
 
-logging.basicConfig(
-    level=logging.INFO,  # Change to DEBUG for development
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 class TaskController:
@@ -32,6 +29,21 @@ class TaskController:
             logger.error("Warning: task_framework.json not found or is invalid. Using an empty framework.\n")
             self.task_framework = {}
 
+    def _save_state(self):
+        """Saves the current state for this chat back to the main state file."""
+        all_states = {}
+        if os.path.exists(TASK_STATE_FILE):
+            with open(TASK_STATE_FILE, 'r') as f:
+                try:
+                    all_states = json.load(f)
+                except json.JSONDecodeError:
+                    logger.error("Could not decode task_state.json, starting fresh.")
+        
+        all_states[self.chat_id] = self.state
+        with open(TASK_STATE_FILE, 'w') as f:
+            json.dump(all_states, f, indent=2)
+        logger.debug(f"Task state saved for chat {self.chat_id}")
+
     def get_task_prompt(self) -> str:
         """Generates the OOC note for the main character's system prompt."""
         if not self.state or not self.state.get('task'):
@@ -40,75 +52,98 @@ class TaskController:
         task = self.state['task']
         progress = int(self.state.get('progress', 0) * 100)
         priority = self.state.get('priority', 'low')
+        task_prompt = f"[OOC Note: Your current focus is to '{task}'. Progress: {progress}%. This is a {priority} priority.]"
+        logger.debug(f"[TaskController] Returning task prompt: '{task_prompt}'")
+        return task_prompt
 
-        return f"[OOC Note: Your current focus is to '{task}'. Progress: {progress}%. This is a {priority} priority.]"
+    # In task_controller.py
 
-    def decide_next_step(self, chat_history: list, settings: dict) -> dict:
+    def decide_next_step(self, chat_history: list, settings: dict):
         """
-        Calls an LLM to act as the Story Controller. It analyzes the current state
-        and conversation to determine the character's next task state.
+        Calls an LLM to generate a NEW task for the character and saves it.
+        This is now only called when a previous task is complete.
         """
-        logger.debug(f"DEBUG: TaskController deciding next step for chat {self.chat_id}\n")
-
-        # Format the recent chat history for the prompt
-        formatted_history = "\n".join([f"[{msg['role']}]: {msg['content']}" for msg in chat_history])
-
-        # This is the detailed prompt for our Story Controller LLM
-        controller_system_prompt = f"""You are a Task Controller for an RPG character. Your job is to analyze the character's situation and determine their most important task. You MUST respond ONLY with a valid JSON object. Do not add any other text.
+        provider = settings.get('llm_provider', 'ollama')
+        logger.debug(f"TaskController: Generating a NEW task for chat {self.chat_id}\n")
+        
+        recent_history = chat_history[-4:] # We still only need the most recent context
+        formatted_history = "\n".join([f"[{msg.get('role', 'unknown')}]: {msg.get('content', '')}" for msg in recent_history])
+        
+        # FIX: A much simpler prompt focused only on generating a new task.
+        controller_system_prompt = f"""You are a Task Controller for an RPG character that returns raw json, no wrapping labels. The character's previous task is complete. Your job is to analyze their situation and generate their NEXT most important task. You MUST respond ONLY with raw valid JSON, no code blocks or backticks.
 
 Analyze the following:
-1.  **Current Task State**: {json.dumps(self.state)}
+1.  **Previous Task State**: {json.dumps(self.state)}
 2.  **Recent Conversation**:
     {formatted_history}
 
-**Your Decision Logic:**
+Decision Logic:
+PATH A: UPD CURR PERS TASK
+If curr pers task ≠ complete (progress < 1.0) & no new urgent pers task fm convo → Assess convo progress/priority
+PATH B: START NEW PERS TASK
+If curr pers task complete (progress == 1.0) OR new urgent pers task fm convo → Gen new pers task:
+If new urgent: use that
+If old complete: 30% chance select theme fm Task Generation Framework
+Set progress → 0.0
+Set priority (low/med/high/critical)
 
-**PATH A: UPDATE CURRENT PERSONAL TASK**
-If the current personal task is NOT complete (`progress` < 1.0) AND no new, more urgent personal task has emerged from the conversation, then:
-1.  Assess if the conversation shows progress on the personal task. Easy tasks progress quickly.
-2.  Update the `progress` value (e.g., from 0.25 to 0.5). Keep `progress` at 1.0 if the personal task is now finished.
-3.  Keep the `task` and `priority` the same unless the urgency has clearly changed.
-
-**PATH B: START NEW PERSONAL TASK**
-If the current personal task IS complete (`progress` == 1.0) OR a new personal task has emerged from the conversation that is clearly more important (e.g., an emergency, a direct user request that is accepted), then:
-1.  Generate a NEW personal task.
-    - If a new urgent personal task emerged, use that, but small chance (10%) of selecting a fitting core_conflict/manifestation or description/hook task from the "Task Generation Framework" below.
-    - (10% chance) If the old personal task was just completed, select a theme (with core_conflict/manifestation or description/hook) from the Task Generation Framework below and create a new interesting, insightful, or unpredictable task based on it.
-2.  Set `progress` to 0.0.
-3.  Set the `priority` for the new personal task (low, medium, high, critical).
+The `priority` field now represents difficulty. It MUST be one of: "easy" (2 turns), "medium" (5 turns), or "hard" (8 turns).
 
 **Task Generation Framework:**
-{json.dumps(self.task_framework, indent=2)}
+4 Tensions: Being(body/mind): vitality/decay, indulgence/discipline, presence/escape. Relating: connection/autonomy, authenticity/mask, protection/vulnerability. 
+Meaning: survival/legacy, ambition/acceptance, control/fate. Action: freedom/responsibility, justice/mercy, truth/loyalty. 
+8 Hooks: Provider/Dreamer, Warrior/Obsolete, Brotherhood/Isolation, Strength/Decay, Protector/Destroyer, Appetite/Discipline, Mask/Truth, Control/Chaos.
 
-Based on your analysis, return the new state in a single, raw JSON object.
-Example response: {{"task": "Order a strong drink from the bartender and pay tab.", "progress": 0.0, "priority": "high", "turn_counter": 0}}
-"""
+Based on your analysis, return the new state in a single, raw JSON object. JUST JSON, NEVER wrap in code block backticks.
+Example response: {{"task": "Find a quiet corner to reflect on the strange encounter.", "progress": 0.0, "priority": "easy", "turn_counter": 0}}
+""" 
 
         try:
-            # We need a dedicated function in the handler for getting structured JSON.
-            # For now, we assume the handler can be made to return a raw JSON string.
-            # We'll use the main `openai` handler but with a prompt that strictly requests JSON.
+            # The rest of this function remains the same as it correctly calls the LLM
+            # and saves the state.
+            response_text = ""
+            if provider == 'openai':
+                response_text = openai.generate_response(controller_system_prompt, [], settings)
+            elif provider == 'anthropic':
+                response_text = anthropic.generate_response(controller_system_prompt, [], settings)
+            elif provider == 'gemini':
+                # FIX: For Gemini, we treat the entire prompt as the first user message
+                # in the conversation history.
+                messages = [
+                    {'role': 'user', 'content': controller_system_prompt}
+                ]
+                # We pass an empty string for the system_prompt and the full prompt in the conversation.
+                response_text = gemini.generate_response("", messages, settings)
+            elif provider == 'perplexity':
+                response_text = perplexity.generate_response(controller_system_prompt, [], settings)
+            elif provider == 'ollama':
+                response_text = ollama.generate_response(controller_system_prompt, [], settings)
+            else:
+                raise ValueError(f"Unknown LLM provider: {provider}")
+            # ... other providers ...
             
-            # NOTE: This uses a simplified call for clarity. The actual implementation in openai.py might be slightly different.
-            # We pass an empty conversation list because the history is already in the system prompt.
-            response_text = openai.generate_response(
-                system_prompt=controller_system_prompt, 
-                conversation=[], 
-                settings=settings,
-            )
+            # DEBUG: Log the raw response
+            logger.debug(f"TaskController RAW LLM Response: '{response_text}'")
+            logger.debug(f"TaskController Response length: {len(response_text) if response_text else 0}")
+
+            cleaned_json = response_text
+            # Check if the response is wrapped in a JSON markdown block
+            if cleaned_json.strip().startswith("```json"):
+                # Use a regular expression to find the content between the curly braces
+                match = re.search(r'\{.*\}', cleaned_json, re.DOTALL)
+                if match:
+                    cleaned_json = match.group(0)
+            
+            if not response_text or response_text.strip() == "":
+                raise ValueError("LLM returned empty response")
 
             new_state = json.loads(response_text)
-
-            # Basic validation to ensure we got a valid object
             if 'task' in new_state and 'progress' in new_state and 'priority' in new_state:
-                logger.debug(f"DEBUG: TaskController successfully updated state to: {new_state}\n")
+                logger.debug(f"TaskController successfully created new task: {new_state}\n")
                 self.state = new_state
             else:
                 raise ValueError("LLM response was valid JSON but missed required keys.")
-
         except (json.JSONDecodeError, ValueError, Exception) as e:
             logger.error(f"ERROR: TaskController failed to get a valid JSON response. Error: {e}. Keeping previous state.\n")
-            # Fallback: If the LLM fails or returns garbage, we don't change the task state.
-            pass
-
-        return self.state
+        
+        self._save_state()

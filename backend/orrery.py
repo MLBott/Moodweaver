@@ -14,7 +14,7 @@ from openai import chat
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,  # Change to DEBUG for development
+    level=logging.DEBUG,  # Change to DEBUG for development
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -830,6 +830,7 @@ class PersonalityOrrery:
             direction = "elevated" if deviation > 0 else "diminished"
             trait_descriptions.append(f"{intensity} {direction} {trait}")
         if trait_descriptions:
+            logger.debug("[Orrery] There are trait descriptions to process.")
             trait_str = f"You feel {', '.join(trait_descriptions)}."
             self.last_trait_descriptions = trait_str
             self.trait_desc_persist = 2
@@ -840,9 +841,11 @@ class PersonalityOrrery:
                 self.last_trait_descriptions = None
 
         if not prompt_parts:
+            logger.debug("[Orrery] No significant personality context to add. Returning empty string.")
             return ""
         final_prompt = " ".join(prompt_parts)
-        return final_prompt + " Respond naturally with this full emotional context, of which the user is mostly the source, in mind. Show, but do not explicitly state these traits in your response."
+        logger.debug(f"[Orrery] Returning personality context: '{final_prompt}'")
+        return final_prompt + " Respond naturally with this full emotional context, of which the user is mostly the source, in mind. Show, but do not explicitly state these traits in your response. 35 words MAX."
     
     def get_trait_summary(self) -> Dict[str, float]:
         """Get a copy of the current trait values."""

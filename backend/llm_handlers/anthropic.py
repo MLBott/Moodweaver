@@ -1,91 +1,105 @@
-import anthropic
-from typing import Dict, List, Tuple
-import logging
-from ..orrery import PersonalityOrrery
+# llm_handlers/anthropic.py
 
-logging.basicConfig(
-    level=logging.INFO,  # Change to DEBUG for development
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
+import logging
+import anthropic
+import json # <-- Make sure json is imported
+from typing import List, Dict
+
+import logging
+import anthropic
+import json
+from typing import List, Dict
+
 logger = logging.getLogger(__name__)
 
 class AnthropicHandler:
-    def __init__(self):
-        self.client = None
-
-    def _get_client(self, api_key: str):
-        """Get or create Anthropic client"""
-        if not self.client:
-            self.client = anthropic.Anthropic(api_key=api_key)
-        return self.client
-
-    def _analyze_sentiment(self, message_content: str, api_key: str, settings: Dict, role: str = "user") -> Tuple[str, float]:
-        """Analyze message sentiment using Claude"""
-        sentiment_prompt = f"""Analyze this message. The message is from the {role}. If from assistant, ignore dialogue and actions, analyze ONLY 
-the physical environment of the assistant and return ONLY the primary sentiment of the physical environment from ONLY this list that best fits 
-how the affective atmosphere of the physical environment would affect a typical male fictional character in an exaggerated way. If from user, return ONLY the primary 
-sentiment of the user's message from ONLY this list:
-praise, criticism, hostility, curiosity, levity, sarcasm, confusion, gratitude, dismissal, agreement, disagreement, 
-frustration, excitement, boredom, concern, disgust, affection, flirtation, vulnerability, jealousy, deception, fear, 
-sadness, awe, shame, hope, intimidation, pleading, contemplation, doubt, command, neutral, betrayal, admiration, 
-playfulness, accusation, surprise, challenge, respect, mockery, achievement, failure, competitiveness, loyalty, comfort, confidence, neutral
-
-Then rate the intensity from 0.1 (very mild) to 1.0 (very strong).
-
-Message: "{message_content}"
-
-Response format: sentiment_word intensity_number
-Example: curiosity 0.7"""
-
-        try:
-            client = self._get_client(api_key)
-            response = client.messages.create(
-                model="claude-3-5-haiku-latest",  # Use cheaper model for sentiment analysis
-                system="You are a precise sentiment analyzer. Follow instructions exactly.",
-                messages=[{"role": "user", "content": sentiment_prompt}],
-                max_tokens=10
-            )
-            # Parse response
-            result = response.content[0].text.strip().split()
-            if len(result) >= 2:
-                sentiment = result[0].lower()
-                try:
-                    intensity = float(result[1])
-                except Exception:
-                    intensity = 0.5
-                return sentiment, max(0.1, min(1.0, intensity))
-        except Exception as e:
-            logger.debug(f"Sentiment analysis failed: {e}\n")
-
-        return "neutral", 0.5
-
     def generate_response(self, system_prompt: str, conversation: List[Dict], settings: Dict) -> str:
-        """Generate a response using the Anthropic API."""
         api_key = settings.get('api_keys', {}).get('anthropic', '')
         if not api_key:
             return "Error: Anthropic API key not found in settings"
 
-        # Format messages for Anthropic
-        messages = [{"role": msg["role"], "content": msg["content"]} for msg in conversation]
-
-        model = settings.get('default_model', 'claude-3-sonnet-20240229')
-        temperature = settings.get('temperature', 0.7)
-
         try:
-            client = self._get_client(api_key)
+            client = anthropic.Anthropic(api_key=api_key)
+            model_name = settings.get('default_model', 'claude-3-5-sonnet-20240620')
+            temperature = float(settings.get('temperature', 0.7))
+
+            # --- Prepare the messages for the API call ---
+            api_messages = []
+            
+            # Process the conversation history
+            last_role = None
+            for msg in conversation:
+                role = "assistant" if msg.get("role") in ["assistant", "character", "system"] else "user"
+                content = msg.get("content", "").strip()
+                
+                # Skip empty messages
+                if not content:
+                    continue
+                    
+                # Skip duplicate consecutive roles
+                if role == last_role:
+                    # Merge with previous message instead of skipping
+                    if api_messages:
+                        api_messages[-1]["content"] += "\n\n" + content
+                    continue
+                
+                api_messages.append({"role": role, "content": content})
+                last_role = role
+            
+            # If we have no messages, create a simple greeting prompt
+            if not api_messages:
+                api_messages.append({"role": "user", "content": "Hello, let's begin our conversation."})
+            
+            # Ensure the conversation starts with a user message
+            if api_messages and api_messages[0]["role"] != "user":
+                api_messages.insert(0, {"role": "user", "content": "Hello, let's begin our conversation."})
+            
+            # Ensure we don't end with a user message (Anthropic expects assistant to respond to user)
+            if api_messages and api_messages[-1]["role"] == "user":
+                # This is correct - we want to end with a user message so assistant can respond
+                pass
+            else:
+                # If we end with assistant message, add a continuation prompt
+                api_messages.append({"role": "user", "content": "Please continue."})
+
+            # --- DEBUGGING BLOCK ---
+            logger.debug("--- Anthropic API Request Payload ---")
+            logger.debug(f"  Model: {model_name}")
+            logger.debug(f"  System Prompt: {system_prompt[:200]}...")  # Truncate for readability
+            logger.debug(f"  Number of Messages: {len(api_messages)}")
+            for i, msg in enumerate(api_messages):
+                logger.debug(f"    Message {i}: {msg['role']} - {msg['content'][:100]}...")
+            logger.debug("---------------------------------")
+            # --- END DEBUGGING BLOCK ---
+
             response = client.messages.create(
-                model=model,
+                model=model_name,
                 system=system_prompt,
-                messages=messages,
+                messages=api_messages,
+                max_tokens=1024,
                 temperature=temperature,
-                max_tokens=2000
             )
-            return response.content[0].text
+            
+            logger.debug(f"--- Anthropic API Raw Response ---")
+            logger.debug(f"Response type: {type(response)}")
+            logger.debug(f"Response content length: {len(response.content) if response.content else 0}")
+            logger.debug(f"First content block: {response.content[0] if response.content else 'None'}")
+            logger.debug("---------------------------------")
+
+            if response.content and len(response.content) > 0:
+                result_text = response.content[0].text
+                logger.debug(f"Extracted text length: {len(result_text)}")
+                logger.debug(f"Extracted text preview: {result_text[:200]}...")
+                return result_text
+            else:
+                logger.warning("Anthropic API returned a valid response with no content.")
+                return ""
+
         except Exception as e:
+            logger.error(f"An exception occurred in the Anthropic handler: {e}", exc_info=True)
             return f"Error with Anthropic API: {str(e)}"
 
-# Public function for app.py to call
-def generate_response(system_prompt: str, conversation: List[Dict], settings: Dict) -> str:
-    handler = AnthropicHandler()
-    return handler.generate_response(system_prompt, conversation, settings)
 
+def generate_response(system_prompt: str, conversation: List[Dict], settings: Dict) -> str:
+    handler_instance = AnthropicHandler()
+    return handler_instance.generate_response(system_prompt, conversation, settings)

@@ -1,3 +1,7 @@
+/* ============================================================================
+   CSS VARIABLES AND GLOBAL STYLES
+   ============================================================================ */
+
 :root {
     --primary-color: #0f1a18;
     --secondary-color: #2c3e50;
@@ -30,7 +34,10 @@ body {
     width: 100%;
 }
 
-/* Sidebar styles */
+/* ============================================================================
+   SIDEBAR AND LEFT PANEL STYLES
+   ============================================================================ */
+
 .sidebar {
     width: 280px;
     background-color: var(--secondary-color);
@@ -56,6 +63,10 @@ body {
 .sidebar-header h2 {
     margin-bottom: 15px;
 }
+
+/* ============================================================================
+   CHAT LIST STYLES
+   ============================================================================ */
 
 .chat-list, .character-section {
     margin-bottom: 20px;
@@ -97,11 +108,28 @@ body {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Character list styles */
+/* ============================================================================
+   CHARACTER STYLES
+   ============================================================================ */
+
 .character-actions {
     display: flex;
     gap: 5px;
 }
+
+.character-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    background-color: #9b59b6;
+    color: rgb(112, 17, 17);
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+/* ============================================================================
+   BUTTON STYLES
+   ============================================================================ */
 
 .small-btn {
     font-size: 12px;
@@ -121,7 +149,6 @@ body {
     background-color: var(--primary-color);
 }
 
-
 .delete-btn {
     background-color: var(--error-color);
     font-size: 10 px;
@@ -129,6 +156,91 @@ body {
     border-radius: 3px;
 }
 
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: #2980b9;
+}
+
+#summarizeBtn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin: 5px 0;
+    display: none; /* Hidden by default */
+    transition: background-color 0.2s;
+}
+
+#summarizeBtn:hover {
+    background-color: #34495e;
+}
+
+.secondary-btn {
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.danger-btn {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.danger-btn:hover {
+    background-color: #7c180d;
+}
+
+/* Make the edit button small, transparent, and subtle */
+.edit-btn {
+    font-size: 8px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: transparent;
+    color: #3d3d3d;
+    border: none;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    vertical-align: middle;
+    min-width: 1px;
+    min-height: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-btn:hover {
+    background: rgba(0,0,0,0.05);
+    color: #222;
+}
+
+.edit-btn:focus {
+    outline: none;
+}
+
+/* ============================================================================
+   MOOD SYSTEM STYLES
+   ============================================================================ */
 
 /* Mood Indicator section */
 .mood-section {
@@ -294,6 +406,10 @@ body {
   pointer-events: auto;
 }
 
+/* ============================================================================
+   WORLD MAP STYLES
+   ============================================================================ */
+
 #world-map-panel {
   /* already set to relative and overflow: hidden */
   position: relative;
@@ -344,6 +460,9 @@ body {
   margin-bottom: 0;
 }
 
+/* ============================================================================
+   DICE ROLLER STYLES
+   ============================================================================ */
 
 /* Dice roller styles */
 .dice-section {
@@ -364,7 +483,6 @@ body {
   padding: 0 !important;
   justify-content: center;
 }
-
 
 .dice-btn {
   background: transparent !important;
@@ -399,7 +517,6 @@ body {
   filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.15));
 }
 
-
 .dice-tooltip {
   background: #111;           /* Solid black background */
   color: #fff;                /* White text */
@@ -416,7 +533,9 @@ body {
   top: 0;
 }
 
-
+/* ============================================================================
+   SYSTEM PROMPT STYLES
+   ============================================================================ */
 
 /* System prompt styles */
 .system-prompt-section {
@@ -434,7 +553,97 @@ body {
 }
 
 
-/* Main content styles */
+/* ============================================================================
+   TEXT STYLING AND SYNTAX HIGHLIGHTING
+   ============================================================================ */
+
+/* Existing dialogue text styling */
+.dialogue-text {
+    color: #fff;
+    font-weight: 500;
+    /* background-color: rgba(255, 255, 255, 0.1); Subtle white highlight background */
+    padding: 1px 2px;
+    border-radius: 2px;
+}
+
+/* Ensure spaCy highlights within dialogue maintain their colors but inherit dialogue styling */
+.dialogue-text .hl-verb { 
+    color: #dfdfdf; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-pronoun { 
+    color: #e0e0e0; 
+    font-weight: 500;
+    background-color: inherit; 
+}
+.dialogue-text .hl-propernoun { 
+    color: #dfdfdf; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-dialoguetag { 
+    color: #ff9800; 
+    font-style: italic; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-negation { 
+    color: #dfdfdf;
+    font-style: italic;
+    font-weight: 500; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-interjection { 
+    text-decoration: underline; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-time-day { 
+    color: #ffd600; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-time-evening { 
+    color: #c57600; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-time-night { 
+    color: #7c4dff; 
+    background-color: inherit; 
+}
+.dialogue-text .hl-plant { 
+    color: #166d00; 
+    /* background-color: inherit; */
+}
+.dialogue-text .hl-water { 
+    color: #2196f3; 
+    background-color: inherit; 
+}
+
+/* Global syntax highlighting styles */
+.hl-verb { color: #dfdfdf; }         /* Red/warm */
+.hl-pronoun { color: #e0e0e0; font-weight: 500;}      /* Cyan/light blue */
+.hl-propernoun { color: #dfdfdf; }   /* Bright green */
+.hl-dialoguetag { color: #ff9800; } /* Orange/amber */
+.hl-negation { color: #dfdfdf; font-style: italic;font-weight: 500;}    
+.hl-interjection { text-decoration: underline; }
+.hl-time-day { color: #ffd600; }
+.hl-time-evening { color: #c57600; }
+.hl-time-night { color: #7c4dff; }
+.hl-plant { color: #166d00; }
+.hl-water { color: #2196f3; }
+
+/* Action/Description Text (Muted Light Blue) */
+.action-text {
+    color: var(--action-color);
+}
+
+/* Attribution Text (Gray and Italics) */
+.attribution-text {
+    color: var(--attribution-color);
+    font-style: italic;
+}
+
+/* ============================================================================
+   MAIN CONTENT AND LAYOUT
+   ============================================================================ */
+
 .main-content {
     flex: 1;
     display: flex;
@@ -459,13 +668,19 @@ body {
     color: var(--primary-color);
 }
 
+/* ============================================================================
+   CHAT MESSAGES AND MESSAGE STYLES
+   ============================================================================ */
+
 .chat-messages {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
     display: flex;
+    width: 100%;
     flex-direction: column;
     gap: 15px;
+    box-sizing: border-box;
 }
 
 .message {
@@ -474,19 +689,20 @@ body {
     border-radius: 8px;
     position: relative;
     line-height: 1.5;
+    /* flex-grow: 1; Allows the message bubble to take up available space */
 }
 
 .message.user {
     background-color: var(--primary-color);
     color: rgb(255, 255, 255);
-    align-self: flex-end;
+    /* align-self: flex-end; */
     border-bottom-right-radius: 0;
 }
 
 .message.assistant {
     background-color: #1d0c09;
     color: var(--text-color);
-    align-self: flex-start;
+    /* align-self: flex-start; */
     border-bottom-left-radius: 0;
 }
 
@@ -502,6 +718,80 @@ body {
     font-size: 12px;
     margin-top: 5px;
     opacity: 0.8;
+}
+
+/* Style for the message content itself */
+.message-content {
+    white-space: pre-wrap; /* This preserves line breaks from the LLM */
+    word-wrap: break-word; /* Prevents long words from overflowing */
+}
+
+/* Narrator message styling */
+div.narrator-message {
+    font-style: italic;
+    color: #dfdfdf; /* A dark gray for readability */
+    text-align: left;
+    background-color: #070c0f; /* A very light gray background */
+    padding: 12px 20px;
+    margin: 0; /* Gives some horizontal space */
+    max-width: 80%; /* Optional: Prevents the box from spanning the entire width */
+    align-self: stretch; /* Aligns the box to the left */
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 4px; /* Slightly rounded corners */
+}
+
+/* Message row layout for avatars */
+.message-row {
+  display: flex;
+  align-items: flex-start; /* Aligns the side-box text with the bottom of the bubble */
+  gap: 10px;
+  /* max-width: 95%; */
+}
+
+/* The new side-box for name/avatar */
+.side-box {
+  flex-shrink: 0; /* Prevents the box from shrinking */
+  width: 80px;
+  text-align: center;
+  font-size: 12px;
+  color: #888888;
+  padding-bottom: 5px; /* Adjust as needed for vertical alignment */
+}
+
+.side-box img {
+  width: 60px; /* Control the size of the avatar image */
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* --- Alignment for the entire row --- */
+
+/* Assistant, Character, and Narrator rows align left */
+.message-row.assistant,
+.message-row.character,
+.message-row.narrator {
+  align-self: flex-start;
+}
+
+/* User row aligns right and reverses the element order */
+.message-row.user {
+  align-self: flex-end;
+  flex-direction: row-reverse; /* This puts the side-box on the right! */
+}
+
+/* ============================================================================
+   CHAT INPUT AND CONTROLS
+   ============================================================================ */
+
+/* Wrapper for input and toggle */
+.chat-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #474747;
+  border-top: 1px solid #ddd;
 }
 
 .chat-input {
@@ -524,72 +814,6 @@ body {
     background-color: #969696; /* Light gray */
 }
 
-/* Button styles */
-.primary-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.primary-btn:hover {
-    background-color: #2980b9;
-}
-
-.secondary-btn {
-    background-color: transparent;
-    color: white;
-    border: 1px solid white;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.secondary-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.danger-btn {
-    background-color: var(--error-color);
-    color: white;
-}
-
-.danger-btn:hover {
-    background-color: #7c180d;
-}
-
-/* Make the edit button small, transparent, and subtle */
-.edit-btn {
-    font-size: 8px;
-    padding: 2px 4px;
-    border-radius: 3px;
-    background: transparent;
-    color: #3d3d3d;
-    border: none;
-    margin-left: 8px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    vertical-align: middle;
-    min-width: 1px;
-    min-height: 1px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.edit-btn:hover {
-    background: rgba(0,0,0,0.05);
-    color: #222;
-}
-
-.edit-btn:focus {
-    outline: none;
-}
-
 .edit-message-textarea {
     width: 600%;
     min-height: 100px;
@@ -605,155 +829,7 @@ body {
     resize: vertical;
 }
 
-
-
-
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 60%;
-    max-width: 600px;
-    position: relative;
-}
-
-.close {
-    position: absolute;
-    right: 20px;
-    top: 15px;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 20px;
-}
-
-.form-group input, .form-group select, .form-group textarea {
-    width: 100%;
-    padding: 4px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-
-/* Character in chat display */
-.character-tag {
-    display: inline-block;
-    padding: 3px 8px;
-    background-color: #9b59b6;
-    color: rgb(112, 17, 17);
-    border-radius: 12px;
-    font-size: 12px;
-    margin-right: 5px;
-}
-
-/* Loading spinner */
-.spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 1s ease-in-out infinite;
-    margin-left: 10px;
-}
-
-/*
- * Style for the message content itself. We apply this to the parent
- * message bubble to ensure proper text alignment.
- */
-.message-content {
-    white-space: pre-wrap; /* This preserves line breaks from the LLM */
-    word-wrap: break-word; /* Prevents long words from overflowing */
-}
-
-
-/* 1. Action/Description Text (Muted Light Blue) */
-.action-text {
-    color: var(--action-color);
-}
-
-/* 2. Dialogue Text (Default Color) */
-.dialogue-text {
-    color: inherit; /* This will inherit the default text color from its parent message bubble */
-    font-weight: 500; /* Makes dialogue stand out slightly */
-}
-
-/* 3. Attribution Text (Gray and Italics) */
-.attribution-text {
-    color: var(--attribution-color);
-    font-style: italic;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .container {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        max-height: 200px;
-    }
-    
-    .modal-content {
-        width: 90%;
-    }
-}
-
-/* Add these styles to the end of your style.css file */
-
-.narrator-message {
-    font-style: italic;
-    color: #0e0a0a; /* A dark gray for readability */
-    text-align: center;
-    background-color: #0a0d0f; /* A very light gray background */
-    padding: 12px 20px;
-    margin: 15px 5%; /* Gives some horizontal space */
-    border-top: 1px solid #e9ecef;
-    border-bottom: 1px solid #e9ecef;
-    border-radius: 4px; /* Slightly rounded corners */
-}
-
-
-/* Wrapper for input and toggle */
-.chat-input-wrapper {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  background-color: #474747;
-  border-top: 1px solid #ddd;
-}
-
-.chat-input {
-  display: flex;
-  align-items: center;
-}
-
-/* New Auto-Continue Button Styling */
+/* Auto-Continue Button Styling */
 .auto-continue-btn {
   margin-left: 8px;
   padding: 8px 10px;
@@ -765,22 +841,7 @@ body {
   transition: transform 0.3s ease;
 }
 
-/* Animation for the rotating icon */
-@keyframes rotate-hand {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.auto-continue-btn.is-counting-down .fa-hand-pointer {
-  animation: rotate-hand 20s linear infinite;
-}
-
-
-/* New Toggle Switch Styling */
+/* Auto-Continue Toggle Switch Styling */
 .auto-continue-toggle {
   display: flex;
   align-items: center;
@@ -840,4 +901,126 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+/* ============================================================================
+   MODAL AND FORM STYLES
+   ============================================================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 60%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 20px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* ============================================================================
+   LOADING AND ANIMATION STYLES
+   ============================================================================ */
+
+/* Loading spinner */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Animation for the rotating icon */
+@keyframes rotate-hand {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auto-continue-btn.is-counting-down .fa-hand-pointer {
+  animation: rotate-hand 20s linear infinite;
+}
+
+/* Animation for map node flashing */
+@keyframes nodeFlash {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.5); 
+  }
+  10% { 
+    opacity: 1; 
+    transform: scale(1.2); 
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        max-height: 200px;
+    }
+    
+    .modal-content {
+        width: 90%;
+    }
 }

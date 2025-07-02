@@ -6,18 +6,28 @@ import os
 import time
 import logging
 import re
-from .llm_handlers import anthropic, ollama, openai
+import random
+import threading
+from .llm_handlers import anthropic, gemini, ollama, openai, perplexity
 from .orrery import PersonalityOrrery
 from .task_controller import TaskController
+from . import prompt_builder
+from . import world_state_manager as wsm
+from . import command_handler
+from . import async_processor
+from . import display_formatter as df
+from . import summarizer
 
 logging.basicConfig(
-    level=logging.INFO,  # Change to DEBUG for development
+    level=logging.DEBUG,  # Change to DEBUG for development
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
+logging.getLogger("hpack").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 logging.getLogger("anthropic").setLevel(logging.WARNING)
+logging.getLogger("gemini_webapi").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
@@ -36,49 +46,6 @@ PLOTS_FILE = os.path.join(DATA_DIR, 'plots.json')
 DEFAULT_TRAIT_CONFIG_FILE = os.path.join(DATA_DIR, 'trait_config.json')
 TASK_STATE_FILE = os.path.join(DATA_DIR, 'task_state.json')
 TASK_FRAMEWORK_FILE = os.path.join(DATA_DIR, 'task_framework.json')
-""" with open('data/world_map.json', 'r') as f:
-    world_map_data = json.load(f)
-    # Storing the nodes in a more easily accessible variable
-    chat_nodes = world_map_data.get('nodes', [])
- """
-
-def create_chat_node_file(chat_id):
-    """Copies the base world_map.json to a new chat-specific node file."""
-    src = os.path.join('data', 'world_map.json')
-    dst = os.path.join('data', f'nodes_{chat_id}.json')
-    if not os.path.exists(dst):
-        with open(src, 'r') as f_src:
-            data = json.load(f_src)
-            # Mark the starting node [1, 1] as visited upon creation
-            if 1 < len(data['nodes']) and 1 < len(data['nodes'][1]) and data['nodes'][1][1]:
-                 data['nodes'][1][1].setdefault('gameplay', {})['visited'] = True
-        with open(dst, 'w') as f_dst:
-            # We only need to store the nodes array, not the whole world object
-            json.dump(data['nodes'], f_dst, indent=2)
-
-def load_chat_nodes(chat_id):
-    path = os.path.join('data', f'nodes_{chat_id}.json')
-    if os.path.exists(path):
-        with open(path, 'r') as f:
-            return json.load(f)
-    return []
-
-def save_chat_nodes(chat_id, nodes):
-    path = os.path.join('data', f'nodes_{chat_id}.json')
-    with open(path, 'w') as f:
-        json.dump(nodes, f, indent=2)
-
-def get_visited_nodes(nodes):
-    """Gets a list of coordinates for all visited nodes."""
-    visited = []
-    for row in nodes:
-        for node in row:
-            if node and node.get("gameplay", {}).get("visited"):
-                coords = node.get("coords")
-                if coords:
-                    visited.append([coords["x"], coords["y"]])
-    return visited
-
 
 
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -123,411 +90,276 @@ def save_json(filename, data):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=2)
 
-def get_node_by_coords(x, y, nodes):
-    """Safely retrieves a node from a given node list."""
-    if nodes and 0 <= y < len(nodes) and 0 <= x < len(nodes[y]):
-        return nodes[y][x]
-    return None
+def parse_and_log_moves(text_to_parse, current_path, chat_nodes):
+    """
+    Parses text for @MOVE commands, updates a path list, and returns the cleaned text.
+    Args:
+        text_to_parse (str): The text from the user or LLM.
+        current_path (list): The list of coordinates visited so far in this turn.
+        chat_nodes (list): The map node data.
+    Returns:
+        tuple: (updated_path, cleaned_text)
+    """
+    cleaned_text = text_to_parse
+    # Find all move commands, not just the first one
+    move_matches = re.finditer(r'@MOVE:\s*(northeast|northwest|southeast|southwest|north|south|east|west)', text_to_parse, re.IGNORECASE)
+    
+    last_known_position = current_path[-1] # The latest position in the path
+    logger.debug(f"Starting parse_and_log_moves with path: {current_path}")
+    
+    moves_found = 0
+    for match in move_matches:
+        moves_found += 1
+        logger.debug(f"Found move command #{moves_found}: {match.group(0)}")
+        
+        # Get the node data for the current last known position
+        node_data = wsm.get_node_by_coords(last_known_position[0], last_known_position[1], chat_nodes)
+        if not (node_data and "connections" in node_data):
+            logger.debug(f"No connections found for position {last_known_position}")
+            continue # Can't move from here
+
+        # Map direction string to key (e.g., "NORTH" -> "N")
+        move_direction_str = match.group(1).strip().upper()
+        dir_map = {"NORTH": "N", "SOUTH": "S", "EAST": "E", "WEST": "W", "NORTHEAST": "NE", "NORTHWEST": "NW", "SOUTHEAST": "SE", "SOUTHWEST": "SW"}
+        move_key = dir_map.get(move_direction_str)
+
+        if move_key and move_key in node_data["connections"]:
+            # A valid move was found
+            new_coords = node_data["connections"][move_key]
+            current_path.append(new_coords) # Add the new location to our path
+            last_known_position = new_coords # Update our last known position for the next move in this loop
+            logger.debug(f"Valid move to {new_coords}. Path is now: {current_path}")
+        else:
+            logger.debug(f"Invalid move direction '{move_key}' from {last_known_position}")
+
+    # After finding all matches, remove the command strings from the text
+    cleaned_text = re.sub(r'@MOVE:\s*(northeast|northwest|southeast|southwest|north|south|east|west)', '', cleaned_text, flags=re.IGNORECASE).strip()
+    
+    logger.debug(f"Finished parsing moves. Final path: {current_path}")
+    return current_path, cleaned_text
 
 # Load default trait config once at startup
 DEFAULT_TRAIT_CONFIG = load_json(DEFAULT_TRAIT_CONFIG_FILE)
 
+
+# In app.py
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    # BUG FIX: Add verbose logging to track session state at the start of a request.
-    logger.debug(f"--- NEW REQUEST ---")
-    logger.debug(f"SESSION at start of request: {session.get('player_coords')}")
+    # --- 1. INITIALIZATION AND DATA LOADING ---
     data = request.json
     user_message = data.get('message')
-    narrator_message = None
-    current_coords = list(session.get('player_coords', [1, 1])) # from tuple to list
     chat_id = data.get('chat_id')
-    character_id = data.get('character_id', None)
-    
+    character_id = data.get('character_id')
     settings = load_json(SETTINGS_FILE)
     provider = settings.get('llm_provider', 'ollama')
     chats_data = load_json(CHATS_FILE)
-    chat_nodes = load_chat_nodes(chat_id)
-    INSTRUCTIONAL_CONTINUE_MESSAGE = "[OOC: Continue.]"
     
     chat = next((c for c in chats_data.get('chats', []) if c.get('id') == chat_id), None)
 
     if not chat:
-        # --- FIX: Generate chat_id only ONCE ---
-        chat_id = str(int(time.time()))
-        create_chat_node_file(chat_id)
+        # Create a new chat if one doesn't exist
+        character_prompt = "You are roleplaying as a new character."
+        if character_id:
+            characters_data = load_json(CHARACTERS_FILE)
+            selected_character = next((c for c in characters_data.get('characters', []) if c.get('id') == character_id), None)
+            if selected_character:
+                character_prompt = selected_character.get('description', character_prompt)
         
+        chat_id = str(int(time.time()))
+        wsm.create_chat_node_file(chat_id)
         initial_state = {trait: config["baseline"] for trait, config in DEFAULT_TRAIT_CONFIG.items()}
         chat = {
             'id': chat_id, 'title': user_message[:30] if user_message else "New Journey", 'created_at': time.time(),
-            'messages': [], 'character_id': character_id, 'system_prompt': "You are roleplaying as a new character.",
-            'trait_config': DEFAULT_TRAIT_CONFIG, 'personality_state': initial_state,
-            'recent_user_sentiments': [], 'repetitive_sentiment_penalty_active': False
+            'messages': [], 'character_id': character_id, 'system_prompt': character_prompt,
+            'trait_config': DEFAULT_TRAIT_CONFIG, 'personality_state': initial_state
         }
         chats_data.setdefault('chats', []).append(chat)
-        session['player_coords'] = (1, 1) # Reset position for new chat
-    
-    chat_nodes = load_chat_nodes(chat_id)
-    if not chat_nodes: # Fallback if file creation failed or is empty
-        create_chat_node_file(chat_id)
-        chat_nodes = load_chat_nodes(chat_id)
+        session['player_coords'] = (1, 1)
 
-    # On first message, show the current node description even if not moving
+    # --- 2. PROCESS PREVIOUS TURN'S ASYNC EFFECTS ---
+    chat = async_processor.process_effects_for_chat(chat, settings)
+
+    # --- 3. PREPARE DATA FOR THIS TURN ---
+    orrery_instance = PersonalityOrrery(
+        trait_config=chat['trait_config'],
+        personality_state=chat['personality_state'],
+        recent_user_sentiments=chat.get('recent_user_sentiments', []),
+        repetitive_sentiment_penalty_active=chat.get('repetitive_sentiment_penalty_active', False)
+    )
     current_coords = list(session.get('player_coords', [1, 1]))
-    new_coords = list(current_coords)
-    narrator_message = None
+    chat_nodes = wsm.load_chat_nodes(chat_id)
 
-    current_node_data = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+    # --- 4. HANDLE USER COMMANDS ---
+    previous_coords = list(current_coords)
+    command_result = command_handler.process_user_command(user_message, current_coords, chat_nodes)
+    user_message_for_history = command_result.get('cleaned_message', user_message)
+
+    if command_result.get('look_result'):
+        logger.debug(f"@LOOK command processed, returning early. Result: {command_result['look_result']}")
+        return jsonify({ 'look_result': df.highlight_text(command_result['look_result']), 'chat_id': chat_id, 'current_coords': current_coords, 'visited_nodes': wsm.get_visited_nodes(chat_nodes) })
+
+    if command_result.get('user_moved'):
+        current_coords = command_result['new_coords']
+        session['player_coords'] = tuple(current_coords)
+        wsm.mark_node_visited(chat_nodes, current_coords[0], current_coords[1])
     
-    """ if 'player_coords' not in session:
-        session['player_coords'] = (1, 1) # Store as tuple
-        session.modified = True
-        
-    if not chat:
-        chat_id = str(int(time.time()))
-        initial_state = {trait: config["baseline"] for trait, config in DEFAULT_TRAIT_CONFIG.items()}
-        chat = {
-            'id': chat_id, 'title': user_message[:30], 'created_at': time.time(), 'messages': [],
-            'character_id': character_id, 'system_prompt': "You are roleplaying as a new character.",
-            'trait_config': DEFAULT_TRAIT_CONFIG, 'personality_state': initial_state,
-            'recent_user_sentiments': [], 'repetitive_sentiment_penalty_active': False
+        logger.debug(f"User move detected. Queuing potential rewrite for previous node {previous_coords}")
+        event_payload = {
+            "coords": previous_coords,
+            "context": { "user": user_message_for_history, "assistant": "" } # Assistant hasn't spoken yet
         }
-        chats_data.setdefault('chats', []).append(chat)
-        chat_id = str(int(time.time()))
-        create_chat_node_file(chat_id)
-        # ...existing chat creation code...
-        # On the very first message of a new chat, describe the starting area.
-        node_data = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+        async_processor.add_effect_to_queue(chat_id, 'environmental_rewrite', event_payload)
 
-        if node_data:
-            narrator_message = node_data.get('description_base', 'You find yourself in a new place.')
- """
+    # --- 5. UPDATE HISTORY AND PREPARE PROMPT COMPONENTS ---
+    if user_message_for_history:
+        chat['messages'].append({'role': 'user', 'content': user_message_for_history, 'user_name': data.get('user_name', 'User'), 'timestamp': time.time()})
 
-    # --- USER-INITIATED MOVEMENT ---
-    # This section handles movement from user commands like "go east"
-    
-    if current_node_data and "connections" in current_node_data:
-        # Simple direction matching
-        user_move_direction = ""
-        if "go east" in user_message.lower(): user_move_direction = "E"
-        elif "go west" in user_message.lower(): user_move_direction = "W"
-        elif "go north" in user_message.lower(): user_move_direction = "N"
-        elif "go south" in user_message.lower(): user_move_direction = "S"
-        elif "go northeast" in user_message.lower(): user_move_direction = "NE"
-        elif "go northwest" in user_message.lower(): user_move_direction = "NW"
-        elif "go southeast" in user_message.lower(): user_move_direction = "SE"
-        elif "go southwest" in user_message.lower(): user_move_direction = "SW"
-        
-        if user_move_direction and user_move_direction in current_node_data["connections"]:
-            new_coords = current_node_data["connections"][user_move_direction]
-
-    # If the user's command caused a move, update session and set narrator message
-    if new_coords != current_coords:
-        session['player_coords'] = tuple(new_coords) # Store as tuple
-        session.modified = True
-        current_coords = new_coords # Update coords for the rest of this request
-        new_node_data = get_node_by_coords(new_coords[0], new_coords[1], chat_nodes)
-        if new_node_data:
-            narrator_message = new_node_data.get('description_base', 'You arrive.')
-            new_node_data.setdefault('gameplay', {})['visited'] = True
-    
-
-    # --- On first message of a new chat, describe the starting area ---
-    if len(chat['messages']) == 0:
-        start_node = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
-        if start_node:
-            narrator_message = start_node.get('description_base', 'You find yourself in a new place.')
-            start_node.setdefault('gameplay', {})['visited'] = True # Ensure start node is visited
-    
-    
-    # Append the new user message to the history FIRST.
-    user_name = data.get('user_name', 'User')
-    
-    if user_message:
-        chat['messages'].append({
-        'role': 'user',
-        'content': user_message,
-        'user_name': user_name,  # <-- store user name
-        'timestamp': time.time()
-    })
-   
-    chat['assistant_message_count'] = chat.get('assistant_message_count', 0) + 1
-
-    # Now, the conversation history is up-to-date for all subsequent steps.
-    conversation = []
-    for msg in chat['messages']:
-        if msg['role'] == 'user' and 'user_name' in msg:
-            # Include user name in the message content
-            conversation.append({
-                "role": "user",
-                "content": f"{msg['user_name']}: {msg['content']}"
-            })
-        else:
-            conversation.append({
-                "role": msg['role'],
-                "content": msg['content']
-            })
-
-    if narrator_message:
-        # Always get the latest node data based on current coordinates
-        node_data = get_node_by_coords(session.get('player_coords', [1, 1])[0], session.get('player_coords', [1, 1])[1], chat_nodes)
-        exits_str = ""
-        if node_data and "connections" in node_data:
-            exits = []
-            dir_names = {
-                "N": "north", "S": "south", "E": "east", "W": "west",
-                "NE": "northeast", "NW": "northwest", "SE": "southeast", "SW": "southwest"
-            }
-            for k in node_data["connections"]:
-                exits.append(dir_names.get(k, k))
-            exits_str = ", ".join(exits) if exits else "none"
-            narrator_full = f"{narrator_message}\n[Exits: {exits_str}]"
-            logger.debug(f"NARRATOR MESSAGE (with exits): {narrator_full}")
-        else:
-            narrator_full = narrator_message
-            logger.debug(f"NARRATOR MESSAGE (no exits): {narrator_full}")
-
-        # Insert as system message at the start of the conversation
-        conversation.insert(0, {
-            "role": "system",
-            "content": f"[OOC Narrator: {narrator_full}]"
-        })
-        chat['messages'].append({
-            'role': 'system',
-            'content': f"[OOC Narrator: {narrator_full}]",
-            'timestamp': time.time()
-        })
-
-    else:
-        logger.debug("No narrator_message set for this turn.")
-
-    # --- SENTIMENT ANALYSIS ---
-    orrery_instance = PersonalityOrrery(trait_config=chat['trait_config'], personality_state=chat['personality_state'],
-        recent_user_sentiments=chat.get('recent_user_sentiments', []), 
-        repetitive_sentiment_penalty_active=chat.get('repetitive_sentiment_penalty_active', False))
-    last_user_message_content = user_message # Use the current message directly
-    
-    if last_user_message_content and last_user_message_content != INSTRUCTIONAL_CONTINUE_MESSAGE:
-        sentiment, intensity = "neutral", 0.5
-        try:
-            if provider == 'openai':
-                handler = openai.OpenAIHandler()
-                api_key = settings.get('api_keys', {}).get('openai', '')
-                # We will make this _analyze_sentiment function in the next step
-                sentiment, intensity = handler._analyze_sentiment(
-                    last_user_message_content, api_key, settings, role="user"
-                )
-            elif provider == 'anthropic':
-                handler = anthropic.AnthropicHandler()
-                api_key = settings.get('api_keys', {}).get('anthropic', '')
-                # We will make this _analyze_sentiment function in the next step
-                sentiment, intensity = handler._analyze_sentiment(
-                    last_user_message_content, api_key, settings, role="user"
-                )
-            # Add other providers here in the future
-
-        except Exception as e:
-            logger.debug("\n" + "="*50)
-            logger.debug("!!! SENTIMENT ANALYSIS FAILED !!!\n")
-            logger.debug(f"ERROR: {e}\n")
-            logger.debug("Defaulting to neutral.\n")
-            logger.debug("="*50 + "\n")
-
-        logger.debug("\n" + "="*50)
-        logger.debug(f"DEBUG: Sentiment Detected: {sentiment.upper()} (Intensity: {intensity:.2f})\n")
-        orrery_instance.update_from_sentiment(sentiment, intensity, from_user=True)
-        chat['recent_user_sentiments'] = orrery_instance.recent_user_sentiments
-        chat['repetitive_sentiment_penalty_active'] = orrery_instance.repetitive_sentiment_penalty_active
-        # Save the chat data to disk
-        save_json(CHATS_FILE, chats_data)
-
-    
-
-    # --- TASK CONTROLLER (CTPS) LOGIC ---
+    # Prepare Task Prompt
     all_task_states = load_json(TASK_STATE_FILE)
-    current_task_state = all_task_states.get(chat_id, {
-        "task": "Settle in and figure out the situation.", "progress": 0.5, "priority": "low", "turn_counter": 0
-    })
+    current_task_state = all_task_states.get(chat_id, {})
     task_controller = TaskController(chat_id, current_task_state)
-    current_task_state['turn_counter'] += 1
-    if current_task_state['turn_counter'] >= 2:
-        logger.debug(f"DEBUG: Turn counter hit {current_task_state['turn_counter']}. Running TaskController.\n")
-        recent_messages = chat.get('messages', [])[-5:]
-        current_task_state = task_controller.decide_next_step(recent_messages, settings)
-        current_task_state['turn_counter'] = 0
-    
     task_prompt_string = task_controller.get_task_prompt()
 
-    # --- FINAL PROMPT CONSTRUCTION & LLM CALL ---
-    system_prompt = chat.get('system_prompt', '')
-    if user_name:
-        system_prompt += f"\nThe user's name is {user_name}."
-    if character_id:
-        # (Your logic to add character description to system_prompt is correct and goes here)
-        # Load character info
-        characters_data = load_json(CHARACTERS_FILE)
-        character = next((c for c in characters_data.get('characters', []) if c.get('id') == character_id), None)
-        if character:
-            system_prompt = f'You are {character["name"]}. {character["description"]}'
-            chat['system_prompt'] = system_prompt  # Update in chat object for persistence
-        pass
+    # Prepare Narrator Prompt
+    current_node_data = wsm.get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+    narrator_context_for_llm = wsm.get_exits_string(current_node_data) if current_node_data else "No exits found."
+    if current_node_data:
+        narrator_context_for_llm = f"{current_node_data.get('description_base', '')} [Exits: {narrator_context_for_llm}]"
 
-    # --- NEW: Inject the temporary prompt if it's active ---
-    if chat.get('temporary_prompt_turns_left', 0) > 0:
-        system_prompt += f"\n{chat['temporary_prompt']}"
-        chat['temporary_prompt_turns_left'] -= 1 # Decrement the counter
-        if chat['temporary_prompt_turns_left'] == 0:
-            chat['temporary_prompt'] = "" # Clear after use
 
+    # --- 6. BUILD PROMPT AND CALL LLM ---
+    enhanced_system_prompt = prompt_builder.build_system_prompt(
+        base_prompt=chat.get('system_prompt', ''),
+        personality_context=orrery_instance.get_personality_prompt(),
+        task_prompt=task_prompt_string,
+        narrator_message=narrator_context_for_llm,
+        user_name=data.get('user_name', 'User')
+    )
+    
+    conversation = chat['messages']
     response_text = ""
     try:
-        personality_context = orrery_instance.get_personality_prompt()
-        enhanced_system_prompt = (task_prompt_string + " " + personality_context + " " + system_prompt).strip()
-        
-        logger.debug("\nDEBUG: Final System Prompt Sent to LLM:\n")
-        logger.debug("-" * 50)
-        logger.debug(enhanced_system_prompt)
-        logger.debug("=" * 50 + "\n")
-
-        if provider == 'openai':
-            response_text = openai.generate_response(enhanced_system_prompt, conversation, settings)
+        if provider == 'gemini':
+            response_text = gemini.generate_response(enhanced_system_prompt, conversation, settings)
+            logger.debug(f"Final System Prompt Sent to LLM:\n{'-'*50}\n{enhanced_system_prompt}\n{'='*50}\n")
         elif provider == 'anthropic':
             response_text = anthropic.generate_response(enhanced_system_prompt, conversation, settings)
+            logger.debug(f"Final System Prompt Sent to Anthropic:\n{'-'*50}\n{enhanced_system_prompt}\n{'='*50}\n")
+        elif provider == 'ollama':
+            # Add your ollama handler here
+            response_text = ollama.generate_response(enhanced_system_prompt, conversation, settings)
+        elif provider == 'openai':
+            # Add your openai handler here
+            response_text = openai.generate_response(enhanced_system_prompt, conversation, settings)
         else:
-            response_text = f"Ollama response based on: {enhanced_system_prompt}"
-            logger.debug("Simplified Ollama call.\n")
-
+            response_text = f"Error: Unknown provider '{provider}'"
+            logger.error(f"Unknown LLM provider: {provider}")
     except Exception as e:
         response_text = f"Error: {str(e)}"
-
-
-    # --- LLM Character Movement Parsing ---
-
-
-    # NOW parse the move command AFTER getting the response
-    llm_move_narrator_message = None
-
-    # Debug: Log the raw response to see what we're working with
-    logger.debug(f"DEBUG: Raw LLM response text:\n'{response_text}'\n")
-
-    # Look for the move command in the response
-    move_match = re.search(
-        r'@MOVE:\s*(northeast|northwest|southeast|southwest|north|south|east|west)',
-        response_text,
-        re.IGNORECASE
-    )
-
+        logger.error(f"LLM API call failed: {str(e)}", exc_info=True)
     
 
-    if move_match:
-        move_direction_str = move_match.group(1).strip().upper()
-        response_text = response_text.replace(move_match.group(0), "").strip()
-
-        logger.debug(f"DEBUG: current_coords before LLM movement parsing: {current_coords}")
-        logger.debug(f"DEBUG: session coords before LLM movement parsing: {session.get('player_coords')}")
-        logger.debug(f"LLM initiated move command found. Direction: '{move_direction_str}'")
-        logger.debug(f"Cleaned response text: '{response_text}'")
+    # --- 7. PROCESS LLM RESPONSE AND QUEUE ASYNC EFFECTS FOR NEXT TURN ---
+    llm_moved = False  # Track if LLM moved for auto-continue logic
+    llm_used_look = False  # Track if LLM used @LOOK for auto-continue logic
+    if response_text:
+        async_processor.add_effect_to_queue(chat_id, 'user_sentiment', {'message': user_message_for_history})
+        async_processor.add_effect_to_queue(chat_id, 'assistant_sentiment', {'message': re.sub('<[^<]+?>', '', response_text)})
         
-        char_current_node_data = get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
-        if char_current_node_data and "connections" in char_current_node_data:
-            connections = char_current_node_data["connections"]
-            dir_map = {"NORTH": "N", "SOUTH": "S", "EAST": "E", "WEST": "W", "NORTHEAST": "NE", "NORTHWEST": "NW", "SOUTHEAST": "SE", "SOUTHWEST": "SW"}
-            move_key = dir_map.get(move_direction_str)
+        previous_coords = list(current_coords)
+        response_text, llm_new_coords, llm_used_look = command_handler.process_llm_response_command(response_text, current_coords, chat_nodes)
+        if llm_new_coords != current_coords:
+            llm_moved = True  # LLM used @MOVE command
+            current_coords = llm_new_coords
+            logger.debug(f"BEFORE session update: {session.get('player_coords')}")
+            session['player_coords'] = tuple(current_coords)
+            session.modified = True  # Mark session as modified to ensure it saves
+            logger.debug(f"AFTER session update: {session.get('player_coords')}")
+            wsm.mark_node_visited(chat_nodes, current_coords[0], current_coords[1])
+            logger.debug(f"LLM move detected. Queuing potential rewrite for previous node {previous_coords}")
+            event_payload = {
+                "coords": previous_coords,
+                "context": { "user": user_message_for_history, "assistant": response_text }
+            }
+            async_processor.add_effect_to_queue(chat_id, 'environmental_rewrite', event_payload)
+
+        # Handle LLM @LOOK command
+        if llm_used_look:
+            logger.debug("Processing LLM @LOOK command")
+            # Get the surrounding context using the existing function
+            look_result = wsm.get_immediate_surrounding_context(current_coords, chat_nodes)
             
-            if move_key and move_key in connections:
-                llm_new_coords = connections[move_key]
-                session['player_coords'] = tuple(llm_new_coords)
-                session.modified = True
-                current_coords = llm_new_coords
-                
-                new_node_data = get_node_by_coords(llm_new_coords[0], llm_new_coords[1], chat_nodes)
-                if new_node_data:
-                    llm_move_narrator_message = new_node_data.get('description_base', 'You arrive at a new location.')
-                    new_node_data.setdefault('gameplay', {})['visited'] = True
+            # Add the look result as a narrator message
+            look_message = f"[OOC: You look around at the possible directions.] {look_result}"
+            chat['messages'].append({
+                'role': 'narrator', 
+                'content': look_message, 
+                'timestamp': time.time(),
+                'auto_continue': True  # Mark for auto-continue
+            })
+            logger.debug(f"Added LLM @LOOK result: {look_message}")
 
+        # Handle automatic task progression and queueing
+        if not current_task_state.get('task') or current_task_state.get('progress', 0) >= 1.0:
+            async_processor.add_effect_to_queue(chat_id, 'task_update', {'messages': chat['messages'][-5:]})
+            logger.debug("No active task. Creating first task immediately.")
+            # Create task immediately (synchronous)
+            task_controller = TaskController(chat_id, current_task_state)
+            task_controller.decide_next_step(chat['messages'][-5:], settings)
+            
+            # Reload the updated task state
+            all_task_states = load_json(TASK_STATE_FILE)
+            current_task_state = all_task_states.get(chat_id, {})
+    
+            logger.debug(f"[TASK_LOGIC] NEW Task Created: {current_task_state.get('task')}")
 
-    # --- ENVIRONMENTAL SENTIMENT ANALYSIS ---
-    try:
-        # Use the same handler as above, or create a new one if needed
-        if provider == 'openai':
-            handler = openai.OpenAIHandler()
-            api_key = settings.get('api_keys', {}).get('openai', '')
-            env_sentiment, env_intensity = handler._analyze_sentiment(
-                response_text, api_key, settings, role="assistant"
-            )
-        elif provider == 'anthropic':
-            handler = anthropic.AnthropicHandler()
-            api_key = settings.get('api_keys', {}).get('anthropic', '')
-            env_sentiment, env_intensity = handler._analyze_sentiment(
-                response_text, api_key, settings, role="assistant"
-            )
         else:
-            env_sentiment, env_intensity = "neutral", 0.5
+            difficulty = current_task_state.get('priority', 'easy').lower()
+            increment_map = {'easy': 1/3, 'medium': 1/5, 'hard': 1/8}
+            increment = increment_map.get(difficulty, 1/3)
+            current_task_state['progress'] = min(1.0, current_task_state.get('progress', 0.0) + increment)
+            all_task_states[chat_id] = current_task_state
+            save_json(TASK_STATE_FILE, all_task_states)
+            logger.debug(f"[TASK_LOGIC] Current Task: {current_task_state.get('task')}")
+            logger.debug(f"[TASK_LOGIC] Current Progress: {current_task_state.get('progress', 0)}")
 
-        logger.debug(f"DEBUG: Environmental Sentiment Detected: {env_sentiment.upper()} (Intensity: {env_intensity:.2f})\n")
-        # Apply at 25% effectiveness
-        orrery_instance.update_from_sentiment(env_sentiment, env_intensity * 0.25, from_user=False)
-
-    except Exception as e:
-        logger.debug(f"Environmental sentiment analysis failed: {e}\n")
-
-    # ...then save the updated personality state as usual...
-
+    # --- 8. FINALIZE AND SAVE STATE ---
+	
+    logger.debug(f"RAW TEXT (pre-spaCy): '{response_text}'")
+    chat['messages'].append({'role': 'assistant', 'content': df.highlight_text(response_text), 'timestamp': time.time()})
     chat['personality_state'] = orrery_instance.get_trait_summary()
-
-    final_narrator_message = llm_move_narrator_message or narrator_message
+    save_json(CHATS_FILE, chats_data)
+    wsm.save_chat_nodes(chat_id, chat_nodes) # Make sure this function exists in wsm
     
-    if final_narrator_message:
-        node_data = get_node_by_coords(session['player_coords'][0], session['player_coords'][1], chat_nodes)
-        if node_data and "connections" in node_data:
-            dir_names = {"N": "north", "S": "south", "E": "east", "W": "west", 
-                         "NE": "northeast", "NW": "northwest", "SE": "southeast", "SW": "southwest"}
-            exits = [dir_names.get(k, k) for k in node_data["connections"]]
-            exits_str = ", ".join(exits) if exits else "none"
-            final_narrator_message += f"\n[Exits: {exits_str}]"
-
+    final_node_data = wsm.get_node_by_coords(current_coords[0], current_coords[1], chat_nodes)
+    final_narrator_message = f"{final_node_data.get('description_base', '')} [Exits: {wsm.get_exits_string(final_node_data)}]" if final_node_data else ""
     
-    # --- SAVE STATE ---
-    chat['messages'].append({'role': 'assistant', 'content': response_text, 'timestamp': time.time()})
-    chat['personality_state'] = orrery_instance.get_trait_summary()
-    all_task_states[chat_id] = current_task_state
-    
-    if final_narrator_message:
+    # Add narrator message to chat history so LLM can respond to room context
+    if final_narrator_message and final_narrator_message.strip():
         chat['messages'].append({
-            'role': 'system',
-            'content': f"[OOC Narrator: {final_narrator_message}]",
+            'role': 'user', 
+            'content': f"[NARRATOR: {final_narrator_message}]", 
             'timestamp': time.time()
         })
+        save_json(CHATS_FILE, chats_data)  # Save again with narrator message
     
-    save_json(CHATS_FILE, chats_data)
-    save_json(TASK_STATE_FILE, all_task_states)
-
-    """ visited_nodes = get_visited_nodes(chat_nodes) """
-    visited_nodes = get_visited_nodes(chat_nodes)
-
-    api_response = {
-        'chat_id': chat_id,
-        'response': response_text,
-        'current_coords': list(current_coords),
-        'visited_nodes': visited_nodes,
-        'narrator_message': final_narrator_message or ""
-    }
-    """ api_response = {
-        'chat_id': chat_id,
-        'response': response_text,
-        'current_coords': list(current_coords),
-        'visited_nodes': visited_nodes
-    }
-
-    if final_narrator_message:
-        api_response['narrator_message'] = final_narrator_message
-        chat['messages'].append({
-            'role': 'system',
-            'content': f"[OOC Narrator: {final_narrator_message}]",
-            'timestamp': time.time()
-        }) """
+    # Debug logging for auto-continue troubleshooting
+    logger.debug(f"RETURNING TO FRONTEND: llm_moved={llm_moved}, llm_used_look={llm_used_look}")
+    logger.debug(f"FINAL COORDS: current_coords={current_coords}, session={session.get('player_coords')}")
+    logger.debug(f"NARRATOR MESSAGE: '{final_narrator_message}' (length: {len(final_narrator_message) if final_narrator_message else 0})")
     
-    return jsonify(api_response)
+    return jsonify({
+        'chat_id': chat_id,
+        'response': df.highlight_text(response_text),
+        'current_coords': current_coords,
+        'visited_nodes': wsm.get_visited_nodes(chat_nodes),
+        'narrator_message': df.highlight_text(final_narrator_message),
+        'narrator_coords': current_coords,  # Add coordinates for map flashing
+        'llm_moved': llm_moved,  # Add flag to indicate if LLM moved
+        'llm_used_look': llm_used_look  # Add flag to trigger auto-continue for @LOOK
+    })
+
 
 # --- New API Route for Editing Messages ---
 @app.route('/api/chat/<chat_id>/edit-message', methods=['PUT'])
@@ -544,79 +376,59 @@ def edit_message(chat_id):
     return jsonify({'success': False, 'error': 'Invalid chat or message index'}), 400
 
 
-# --- New API Route for Summarizing Chats ---
 @app.route('/api/chat/<chat_id>/summarize', methods=['POST'])
 def summarize_chat(chat_id):
-    chats_data = load_json(CHATS_FILE)
-    chat = next((c for c in chats_data.get('chats', []) if c.get('id') == chat_id), None)
-    if not chat:
-        return jsonify({"error": "Chat not found"}), 404
-
-    messages = chat['messages']
-    if len(messages) <= 6:
-        return jsonify({"error": "Not enough messages to summarize"}), 400
-
-    # Find previous OOC summary if it exists (optional, for chaining summaries)
-    previous_summary = ""
-    for msg in messages:
-        if msg['role'] == 'assistant' and msg['content'].startswith("OOC:"):
-            previous_summary = msg['content']
-
-    # Get messages to summarize (all but last 6, and not previous OOC summaries)
-    to_summarize = [
-        msg for msg in messages[:-6]
-        if not (msg['role'] == 'assistant' and msg['content'].startswith("OOC:"))
-    ]
-    if not to_summarize:
-        return jsonify({"error": "No messages to summarize"}), 400
-
-    # Build text for summarization
-    text = "\n".join(
-        (f"{msg.get('user_name', 'User')}: {msg['content']}" if msg['role'] == 'user' else f"{msg['role'].capitalize()}: {msg['content']}")
-        for msg in to_summarize
-    )
-    if previous_summary:
-        text = f"Previous summary:\n{previous_summary}\n\nNew messages:\n{text}"
-
-    # Use LLM to summarize
-    settings = load_json(SETTINGS_FILE)
-    provider = settings.get('llm_provider', 'ollama')
-    summary_prompt = (
-        "Create a concise timeline summary of this roleplay conversation. Focus on: "
-        "key events & actions by characters, important dialogue/decisions, relationship "
-        "developments/emotional moments, plot progression. Careful attention to correct association of who with what.Format as brief bullet points "
-        "or chronological entries. Remove all OOC commentary, formatting symbols "
-        "(*italics*, **bold**), & redundant descriptions. Compress similar actions. Use "
-        "abbreviations & symbols (→, &, +) where clear. Drop articles/prepositions. Avoid 'you' descrip, use 'user' or user's 'user_name'."
-        "Goal: preserve story continuity for context while drastically reducing token count.\n\n"
-        f"{text}"
-    )
-    summary_text = ""
+    """
+    Summarizes earlier messages in a chat conversation.
+    Replaces older messages with a concise summary to manage context length.
+    """
     try:
-        if provider == 'openai':
-            summary_text = openai.generate_response(summary_prompt, [], settings)
-        elif provider == 'anthropic':
-            summary_text = anthropic.generate_response(summary_prompt, [], settings)
-        else:
-            summary_text = f"Ollama summary: {summary_prompt[:200]}..."
+        chats_data = load_json(CHATS_FILE)
+        chat = next((c for c in chats_data.get('chats', []) if c.get('id') == chat_id), None)
+        
+        if not chat:
+            return jsonify({"error": "Chat not found"}), 404
+        
+        # Check if there are enough messages to summarize (more than 6)
+        if len(chat['messages']) <= 6:
+            return jsonify({"error": "Not enough messages to summarize. Need more than 6 messages."}), 400
+        
+        settings = load_json(SETTINGS_FILE)
+        
+        # Generate the summary using the existing summarizer
+        summary = summarizer.summarize_conversation(chat['messages'], settings)
+        
+        # Create the summary message
+        summary_message = {
+            'role': 'assistant',
+            'content': f"OOC: {summary}",
+            'timestamp': time.time(),
+            'is_summary': True
+        }
+        
+        # Replace older messages with the summary
+        # Keep the last 6 messages and add the summary at the beginning
+        recent_messages = chat['messages'][-6:]
+        chat['messages'] = [summary_message] + recent_messages
+        
+        # Save the updated chat
+        save_json(CHATS_FILE, chats_data)
+        
+        logger.info(f"Successfully summarized chat {chat_id}. Reduced from {len(chat['messages']) + len(recent_messages) - 1} to {len(chat['messages'])} messages.")
+        
+        return jsonify({
+            "success": True,
+            "summary": summary,
+            "message": f"Successfully summarized earlier messages. Chat reduced to {len(chat['messages'])} messages."
+        })
+        
+    except ValueError as e:
+        logger.error(f"Summarization error for chat {chat_id}: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+        
     except Exception as e:
+        logger.error(f"Unexpected error during summarization for chat {chat_id}: {str(e)}", exc_info=True)
         return jsonify({"error": f"Summarization failed: {str(e)}"}), 500
-
-    # Keep only the newest 6 messages (excluding previous OOC summaries)
-    last_6 = [msg for msg in messages[-6:] if not (msg['role'] == 'assistant' and msg['content'].startswith("OOC:"))]
-
-    # Build new messages list: new OOC summary as assistant, last 6 messages
-    new_messages = [{
-        "role": "assistant",
-        "content": f"OOC: {summary_text}",
-        "timestamp": time.time()
-    }]
-    new_messages.extend(last_6)
-    chat['messages'] = new_messages
-
-    save_json(CHATS_FILE, chats_data)
-    return jsonify({"summary": summary_text})
-
 
 
 # --- Other API Routes (Unchanged) ---
@@ -790,18 +602,37 @@ def trigger_read_body_language(chat_id):
         return jsonify({"success": False, "error": "Chat not found"}), 404
 
     logger.debug(f"DEBUG: Chat {chat_id} - User clicked to read body language. Applying effects.\n")
-    
-    # Apply the trait hits
+
+    # Roll the 20-sided die
+    dice_roll = random.randint(1, 20)
+    logger.debug(f"DEBUG: Dice roll result: {dice_roll}")
+
+    # Calculate modifier
+    base_modifier = 0.1
+    if dice_roll < 10:
+        modifier = base_modifier + (0.01 * (10 - dice_roll))
+    elif dice_roll > 11:
+        modifier = base_modifier - (0.01 * (dice_roll - 11))
+    else:
+        modifier = base_modifier
+
+    logger.debug(f"DEBUG: Modifier after dice adjustment: {modifier:.2f}")
+
+    # Apply modified trait effects
     state = chat['personality_state']
-    state['grudge'] = min(state.get('grudge', 0) + 0.1, 1.0)
-    state['tension'] = min(state.get('tension', 0) + 0.1, 1.0)
-    state['trust'] = max(state.get('trust', 0) - 0.1, 0.0)
-    state['openness'] = max(state.get('openness', 0) - 0.1, 0.0)
+    state['grudge'] = min(state.get('grudge', 0) + modifier, 1.0)
+    state['tension'] = min(state.get('tension', 0) + modifier, 1.0)
+    state['trust'] = max(state.get('trust', 0) - modifier, 0.0)
+    state['openness'] = max(state.get('openness', 0) - modifier, 0.0)
 
     chat['assistant_message_count'] = 2  # So next message will be (count - 2) % 6 == 0
 
-    # Set the temporary prompt
-    chat['temporary_prompt'] = "TELL USER TO STOP STARING AT YOU, in your own way! It's weird! Interject, interrpt to tell them to stop staring at you. If they keep doing it, use stronger response."
+    # Set temporary prompt
+    chat['temporary_prompt'] = (
+        "TELL USER TO STOP STARING AT YOU, in your own way! It's weird! "
+        "Interject, interrupt to tell them to stop staring at you. "
+        "If they keep doing it, use stronger response."
+    )
     chat['temporary_prompt_turns_left'] = 2
 
     save_json(CHATS_FILE, chats_data)
@@ -811,7 +642,7 @@ def trigger_read_body_language(chat_id):
 @app.route('/api/debug/world-map')
 def debug_world_map(chat_id):
     """Debug route to inspect world map connections for a SPECIFIC chat."""
-    chat_nodes = load_chat_nodes(chat_id)
+    chat_nodes = wsm.load_chat_nodes(chat_id)
     if not chat_nodes:
         return jsonify({"error": f"No node file found for chat_id: {chat_id}"}), 404
         
@@ -831,17 +662,54 @@ def debug_world_map(chat_id):
 @app.route('/api/debug/node/<int:x>/<int:y>')
 def debug_node(chat_id,x, y):
     """Debug a specific node for a SPECIFIC chat."""
-    chat_nodes = load_chat_nodes(chat_id)
+    chat_nodes = wsm.load_chat_nodes(chat_id)
     if not chat_nodes:
         return jsonify({"error": f"No node file found for chat_id: {chat_id}"}), 404
 
-    node = get_node_by_coords(x, y, chat_nodes)
+    node = wsm.get_node_by_coords(x, y, chat_nodes)
     if not node:
         return jsonify({'error': 'Node not found or is null'}), 404
     
     return jsonify({
         'coords': [x, y],
         'node_data': node
+    })
+@app.route('/api/debug/teleport', methods=['POST'])
+def debug_teleport():
+    data = request.json
+    chat_id = data.get('chat_id')
+    x = data.get('x')
+    y = data.get('y')
+    session['player_coords'] = (x, y)
+    session.modified = True
+    return jsonify({"status": "teleported", "coords": [x, y]})
+
+
+# --- API endpoint for getting node coordinates for map flashing ---
+@app.route('/api/chat/<chat_id>/node-coords', methods=['GET'])
+def get_node_coords(chat_id):
+    """
+    Returns the coordinates for a given node description.
+    Used for flashing nodes on the map when narrator descriptions are clicked.
+    """
+    x = request.args.get('x', type=int)
+    y = request.args.get('y', type=int)
+    
+    if x is None or y is None:
+        return jsonify({"error": "Missing x or y coordinates"}), 400
+    
+    chat_nodes = wsm.load_chat_nodes(chat_id)
+    if not chat_nodes:
+        return jsonify({"error": f"No node file found for chat_id: {chat_id}"}), 404
+    
+    node_data = wsm.get_node_by_coords(x, y, chat_nodes)
+    if not node_data:
+        return jsonify({"error": "Node not found"}), 404
+    
+    return jsonify({
+        "coords": [x, y],
+        "description": node_data.get('description_base', ''),
+        "exits": wsm.get_exits_string(node_data) if node_data else ""
     })
 
 

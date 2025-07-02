@@ -4,15 +4,19 @@
   "temperature": 0.7,
   "api_keys": {
     "openai": "",
-    "anthropic": ""
+    "anthropic": "",
+    "perplexity": "",
+    "gemini_key": ""
   },
-  "default_model": "",
   "support_llm": {
-    "provider": "",
+    "provider": "openai",
+    "model": "gpt-4.1-mini",
     "api_keys": {
+      "anthropic": "",
+      "gemini_key": "",
       "openai": "",
-      "anthropic": ""
-    },
-    "model": ""
-  }
+      "perplexity": ""
+    }
+  },
+  "default_model": "gpt-4.1"
 }

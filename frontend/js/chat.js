@@ -186,8 +186,24 @@ function loadChat(chatId) {
       chatMessages.innerHTML = "";
 
       chat.messages.forEach((message, idx) => {
+        // Track coordinates for narrator messages in chat history
+        if ((message.role === "narrator" || 
+             (message.role === "user" && message.content.includes("[NARRATOR:"))) && 
+            !message.coords) {
+          message.coords = window.currentPlayerCoords || [1, 1];
+        }
         displayMessage(message, idx);
       });
+
+      // Show/hide summarize button based on message count
+      const summarizeBtn = document.getElementById("summarizeBtn");
+      if (summarizeBtn) {
+        if (chat.messages.length > 6) {
+          summarizeBtn.style.display = "block";
+        } else {
+          summarizeBtn.style.display = "none";
+        }
+      }
 
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -310,61 +326,97 @@ function formatAndStyleMessage(text) {
 // Display and Save an edited message
 function displayMessage(message, index) {
   const chatMessages = document.getElementById("chatMessages");
+
+  // Create the main container for the entire row
+  const messageRow = document.createElement("div");
+
+  // Create the message bubble element
   const messageElement = document.createElement("div");
 
-  let messageClass = message.role;
+  // --- Determine Role and Class ---
+  let roleClass = message.role; // Default to 'user', 'system', etc.
   if (message.role === "assistant" && currentCharacterId) {
-    messageClass = "character";
+    roleClass = "character";
+  } else if (message.display_as === "narrator" || 
+             (message.role === "user" && message.content.includes("[NARRATOR:"))) {
+    roleClass = "narrator";
   }
 
-  if (message.role === "ooc_summary") {
-    messageClass = "ooc-summary";
+  // Apply classes to the row and the message bubble itself
+  messageRow.className = `message-row ${roleClass}`;
+  if (roleClass === "narrator") {
+    // Narrator gets a special class for full-width styling
+    messageElement.className = "narrator-message";
+    // Make narrator messages clickable for map flashing
+    messageElement.style.cursor = "pointer";
+    messageElement.title = "Click to flash location on map";
+  } else {
+    messageElement.className = `message ${roleClass}`;
   }
-  messageElement.className = `message ${messageClass}`;
 
-  // Content wrapper
+  // --- Create the Side Box ---
+  const sideBox = document.createElement("div");
+  sideBox.className = "side-box";
+
+  // Set the content of the side box based on the role
+  if (roleClass === 'character') {
+    // For a real implementation, you would fetch the character's name.
+    // We can also add an image here later.
+    // For example: sideBox.innerHTML = `<img src="${character.avatar_url}" />`;
+    sideBox.textContent = "Character"; // Placeholder
+  } else if (roleClass === 'user') {
+    sideBox.textContent = message.user_name || "User";
+  } else if (roleClass === 'narrator') {
+    sideBox.textContent = "Narrator";
+  }
+
+
+  // --- Assemble the Message Content ---
   const contentWrapper = document.createElement("div");
   contentWrapper.className = "message-content";
-  contentWrapper.innerHTML = formatAndStyleMessage(message.content);
 
-  // Edit button
-  const editBtn = document.createElement("button");
-  editBtn.className = "small-btn edit-btn";
-  // editBtn.textContent = "Edit";
-  editBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;">
-    <path d="M14.69 2.86l2.45 2.45c.39.39.39 1.02 0 1.41l-9.19 9.19-3.25.81.81-3.25 9.19-9.19a1 1 0 0 1 1.41 0z" fill="#888"/>
-  </svg>`;
-  editBtn.addEventListener("click", () => {
-    // Replace content with textarea
-    const textarea = document.createElement("textarea");
-    textarea.value = message.content;
-    textarea.className = "edit-message-textarea";
-    contentWrapper.innerHTML = "";
-    contentWrapper.appendChild(textarea);
-    textarea.focus();
-
-    // Save on blur
-    textarea.addEventListener("blur", () => {
-      const newText = textarea.value.trim();
-      if (newText && newText !== message.content) {
-        saveEditedMessage(index, newText);
-      }
-      // Restore display
-      contentWrapper.innerHTML = formatAndStyleMessage(newText || message.content);
-      contentWrapper.appendChild(editBtn);
-    });
-  });
-
-  contentWrapper.appendChild(editBtn);
+  if (["assistant", "character", "narrator", "system"].includes(message.role)) {
+    contentWrapper.innerHTML = message.content;
+  } else {
+    contentWrapper.innerHTML = formatAndStyleMessage(message.content);
+  }
+  
+  // Add click handler for narrator messages to flash map location
+  if (roleClass === "narrator") {
+    const coords = message.coords || extractCoordsFromNarratorMessage(message);
+    if (coords) {
+      messageElement.addEventListener("click", () => {
+        flashNodeOnMap(coords[0], coords[1]);
+      });
+    }
+  }
+  
   messageElement.appendChild(contentWrapper);
 
-  // Timestamp
-  const timestampElement = document.createElement("span");
-  timestampElement.className = "message-meta";
-  timestampElement.textContent = formatTimestamp(message.timestamp);
-  messageElement.appendChild(timestampElement);
+  // --- Assemble the final row ---
+  // The order of appending determines the visual order (CSS can reverse it for user)
+  messageRow.appendChild(sideBox);
+  messageRow.appendChild(messageElement);
 
-  chatMessages.appendChild(messageElement);
+
+  // --- Add Timestamp and Edit Button (if not narrator) ---
+  if (roleClass !== 'narrator') {
+    const editBtn = document.createElement("button");
+    editBtn.className = "small-btn edit-btn";
+    editBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;"><path d="M14.69 2.86l2.45 2.45c.39.39.39 1.02 0 1.41l-9.19 9.19-3.25.81.81-3.25 9.19-9.19a1 1 0 0 1 1.41 0z" fill="#888"/></svg>`;
+    editBtn.addEventListener("click", () => {
+        // (Your existing edit logic here)
+    });
+    contentWrapper.appendChild(editBtn);
+
+    const timestampElement = document.createElement("span");
+    timestampElement.className = "message-meta";
+    timestampElement.textContent = formatTimestamp(message.timestamp);
+    messageElement.appendChild(timestampElement);
+  }
+
+  // Append the fully assembled row to the chat window
+  chatMessages.appendChild(messageRow);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
@@ -428,6 +480,7 @@ function sendMessage() {
   const userMsgIndex = chatMessages.children.length;
   displayMessage({
     role: "user",
+    user_name: userName,
     content: message,
     timestamp: Math.floor(Date.now() / 1000),
   }, userMsgIndex);
@@ -481,8 +534,17 @@ function sendMessage() {
           role: "narrator",
           content: data.narrator_message,
           timestamp: Math.floor(Date.now() / 1000),
+          coords: data.narrator_coords || data.current_coords  // Add coordinates for map flashing
         }, narratorMsgIndex);
         narratorWasDisplayed = true;
+      }
+
+      if (data.look_result) {
+        displayMessage({
+          role: "system",
+          content: data.look_result,
+          timestamp: Math.floor(Date.now() / 1000)
+        }, chatMessages.children.length);
       }
 
       if (data.current_coords && Array.isArray(data.current_coords)) {
@@ -496,7 +558,9 @@ function sendMessage() {
       }
       
       // --- AUTO-CONTINUE LOGIC ---
-      if (narratorWasDisplayed) {
+      // Auto-continue when LLM moves or uses @LOOK (narrator message enhances but isn't required)
+      if (data.llm_moved || data.llm_used_look) {
+        console.log(`Auto-continue triggered: llm_moved=${data.llm_moved}, llm_used_look=${data.llm_used_look}, narratorWasDisplayed=${narratorWasDisplayed}`);
         // Wait a moment for UI update, then auto-continue
         setTimeout(() => {
           fetch(`${API_BASE_URL}/chat`, {
@@ -526,6 +590,7 @@ function sendMessage() {
                 role: "narrator",
                 content: autoData.narrator_message,
                 timestamp: Math.floor(Date.now() / 1000),
+                coords: autoData.narrator_coords || autoData.current_coords  // Add coordinates for map flashing
               }, autoNarratorMsgIndex);
             }
 
@@ -534,7 +599,6 @@ function sendMessage() {
             }
           });
         }, 1200); // 1.2s delay for smoother UX
-
       }
     })
     .catch((error) => {
@@ -769,7 +833,96 @@ function debugGenderPreferences() {
 
 // Update the active mode display
 
+// Extract coordinates from narrator messages stored in chat history
+function extractCoordsFromNarratorMessage(message) {
+  // For existing narrator messages, we'll use the current player coordinates
+  // In the future, we could store coordinates in the message when saving
+  if (message.role === "narrator" || 
+      (message.role === "user" && message.content.includes("[NARRATOR:"))) {
+    return window.currentPlayerCoords || [1, 1];
+  }
+  return null;
+}
 
+// Flash a specific node on the map with yellow glow
+function flashNodeOnMap(x, y) {
+  console.log(`Flashing node at coordinates: [${x}, ${y}]`);
+  
+  // Flash on both mini-map and zoom map
+  flashNodeOnMiniMap(x, y);
+  
+  // If zoom map is visible, flash there too
+  const zoomOverlay = document.getElementById('world-map-zoom-overlay');
+  if (zoomOverlay && zoomOverlay.style.display !== 'none') {
+    flashNodeOnZoomMap(x, y);
+  }
+}
+
+function flashNodeOnMiniMap(x, y) {
+  const mapPanel = document.getElementById('world-map-panel');
+  const mapWidth = mapPanel.offsetWidth;
+  const mapHeight = mapPanel.offsetHeight;
+  
+  // Convert grid coordinates to pixel position
+  const px = (x / 99) * mapWidth;
+  const py = (y / 99) * mapHeight;
+  
+  // Create flash element
+  const flashElement = document.createElement('div');
+  flashElement.style.position = 'absolute';
+  flashElement.style.left = `${px - 10}px`;
+  flashElement.style.top = `${py - 10}px`;
+  flashElement.style.width = '20px';
+  flashElement.style.height = '20px';
+  flashElement.style.borderRadius = '50%';
+  flashElement.style.backgroundColor = 'rgba(255, 255, 0, 0.8)';
+  flashElement.style.boxShadow = '0 0 20px rgba(255, 255, 0, 0.9)';
+  flashElement.style.pointerEvents = 'none';
+  flashElement.style.zIndex = '1000';
+  flashElement.style.animation = 'nodeFlash 3s ease-in-out';
+  
+  mapPanel.appendChild(flashElement);
+  
+  // Remove after animation
+  setTimeout(() => {
+    if (flashElement.parentNode) {
+      flashElement.parentNode.removeChild(flashElement);
+    }
+  }, 3000);
+}
+
+function flashNodeOnZoomMap(x, y) {
+  const zoomInner = document.getElementById('world-map-zoom-inner');
+  const mapWidth = zoomInner.offsetWidth;
+  const mapHeight = zoomInner.offsetHeight;
+  
+  // Convert grid coordinates to pixel position
+  const px = (x / 99) * mapWidth;
+  const py = (y / 99) * mapHeight;
+  
+  // Create flash element
+  const flashElement = document.createElement('div');
+  flashElement.style.position = 'absolute';
+  flashElement.style.left = `${px - 15}px`;
+  flashElement.style.top = `${py - 15}px`;
+  flashElement.style.width = '30px';
+  flashElement.style.height = '30px';
+  flashElement.style.borderRadius = '50%';
+  flashElement.style.backgroundColor = 'rgba(255, 255, 0, 0.8)';
+  flashElement.style.boxShadow = '0 0 30px rgba(255, 255, 0, 0.9)';
+  flashElement.style.pointerEvents = 'none';
+  flashElement.style.zIndex = '1000';
+  flashElement.style.animation = 'nodeFlash 3s ease-in-out';
+  
+  zoomInner.appendChild(flashElement);
+  
+  // Remove after animation
+  setTimeout(() => {
+    if (flashElement.parentNode) {
+      flashElement.parentNode.removeChild(flashElement);
+    }
+  }, 3000);
+}
 
 // World Map update
 function updatePlayerDot(x, y) {
@@ -916,7 +1069,7 @@ document.getElementById('world-map-zoom-inner').addEventListener('mouseleave', f
 
  document.getElementById('world-map-zoom-overlay').addEventListener('click', function(e){
    if(e.target === this) this.style.display = 'none';
-});
+ });
 
 document.getElementById('playerIconSelect').addEventListener('change', function() {
   const iconUrl = this.value;
