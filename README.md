@@ -213,17 +213,6 @@ Setup your LLM provider in settings interface
 
 ---
 
-## 📖 Documentation
-
-- [🏗️ **Setup Guide**](docs/setup.md) - Get started in minutes
-- [🎭 **Character Creation**](docs/characters.md) - Design compelling AI personas  
-- [🧠 **Personality System**](docs/personality.md) - Deep dive into the Orrery
-- [🗺️ **World System**](docs/world.md) - Interactive environments and exploration
-- [⚙️ **Configuration**](docs/config.md) - Customize your experience
-- [🔧 **API Reference**](docs/api.md) - Developer documentation
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Whether you're fixing bugs, adding features, or improving documentation:
